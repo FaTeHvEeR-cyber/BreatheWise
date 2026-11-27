@@ -73,7 +73,10 @@ describe('Vercel API functional endpoints & Gemini responses', () => {
       .mockResolvedValueOnce({ text: JSON.stringify(MOCK_GEMINI_RESPONSES.community) });
 
     const qRes = createMockRes();
-    await questionsHandler({ method: 'POST', headers: jsonHeaders, body: VALID_QUESTIONS_REQ }, qRes);
+    await questionsHandler(
+      { method: 'POST', headers: jsonHeaders, body: VALID_QUESTIONS_REQ },
+      qRes,
+    );
     expect(qRes.statusCode).toBe(200);
     expect((qRes.jsonBody as { source: string }).source).toBe('gemini-3.8-flash');
 

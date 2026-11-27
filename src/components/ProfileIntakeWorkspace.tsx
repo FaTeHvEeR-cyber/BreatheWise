@@ -137,10 +137,11 @@ export default function ProfileIntakeWorkspace(props: ProfileIntakeWorkspaceProp
                 type="button"
                 aria-pressed={active}
                 onClick={() => onSelectSampleProfile(preset)}
-                className={`flex flex-col justify-between border p-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 ${active
-                  ? 'border-teal-800 bg-teal-50/70 text-slate-900'
-                  : 'border-slate-200 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50'
-                  }`}
+                className={`flex flex-col justify-between border p-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 ${
+                  active
+                    ? 'border-teal-800 bg-teal-50/70 text-slate-900'
+                    : 'border-slate-200 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50'
+                }`}
               >
                 <div>
                   <span className="block text-sm font-semibold text-slate-900">{preset.title}</span>
