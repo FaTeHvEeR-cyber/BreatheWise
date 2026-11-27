@@ -14,13 +14,13 @@ const AqiSchema = z.number().finite().min(0).max(500);
 const NonNegNullable = z.number().finite().min(0).max(5000).nullable();
 const TimeSlotSchema = z.enum(['Morning', 'Midday', 'Evening', 'Night']);
 const SourceFields = {
-  source: z.string().min(1).max(80).optional(),
+  source: z.string().trim().min(1).max(80).optional(),
   sourceMode: z.enum(['gemini', 'fallback']).optional(),
 };
 
 const HouseholdProfileSchema = z.object({
-  profileName: z.string().max(160),
-  personaSummary: z.string().max(500),
+  profileName: z.string().max(300),
+  personaSummary: z.string().max(1000),
   commuteDistanceKm: z.number().finite().min(0).max(300),
   commuteMode: z.enum(['petrol_car', 'metro', 'two_wheeler', 'bus_auto', 'walk_cycle', 'hybrid_wfh']),
   cookingFuel: z.enum(['lpg_gas', 'png_gas', 'induction']),
@@ -29,7 +29,7 @@ const HouseholdProfileSchema = z.object({
   hasCrossVentilation: z.boolean(),
   roomCount: z.number().int().min(1).max(30),
   activeRoomCount: z.number().int().min(1).max(30).optional(),
-  vulnerableMembers: z.string().max(300),
+  vulnerableMembers: z.string().max(500),
 });
 
 const TimeWindowBandSchema = z.object({
@@ -37,9 +37,9 @@ const TimeWindowBandSchema = z.object({
   endHourLabel: z.string().min(1).max(40),
   startIndex: z.number().int().min(0).max(48),
   endIndex: z.number().int().min(0).max(48),
-  avgPm25: z.number().finite().min(0).max(2000),
-  peakPm25: z.number().finite().min(0).max(2000),
-  minPm25: z.number().finite().min(0).max(2000),
+  avgPm25: z.number().finite().min(0).max(5000),
+  peakPm25: z.number().finite().min(0).max(5000),
+  minPm25: z.number().finite().min(0).max(5000),
   verdict: z.enum(['Open Windows', 'Brief Purge', 'Keep Sealed']),
 });
 
@@ -59,25 +59,25 @@ export const ClarifyingQuestionsRequestSchema = z.object({
   dominant: z.string().trim().min(1).max(40),
   pm25: NonNegNullable,
   hasHouseholdProfile: z.boolean(),
-  household: z.string().max(600).optional(),
-  notes: z.string().max(1500).nullable().optional(),
+  household: z.string().max(1200).optional(),
+  notes: z.string().max(3000).nullable().optional(),
   requestedCount: z.union([z.literal(2), z.literal(3)]).optional(),
   focus: z.enum(['intake', 'indoor']).optional(),
-  existingQuestions: z.array(z.string().max(300)).max(15).optional(),
+  existingQuestions: z.array(z.string().max(400)).max(20).optional(),
 });
 
-export const ClarifyingQuestionsResponseSchema = z.object({
-  airContextNote: z.string().min(1),
+export const ClarifyingQuestionsModelSchema = z.object({
+  airContextNote: z.string().trim().min(1),
   questions: z.array(
     z.object({
-      id: z.string().min(1),
-      question: z.string().min(1),
-      reason: z.string().min(1),
-      quickOptions: z.array(z.string().min(1)).min(1).max(6),
+      id: z.string().trim().min(1),
+      question: z.string().trim().min(1),
+      reason: z.string().trim(),
+      quickOptions: z.array(z.string().trim().min(1)).min(1),
     }),
-  ).min(1).max(6),
-  ...SourceFields,
+  ).min(1),
 });
+export const ClarifyingQuestionsResponseSchema = ClarifyingQuestionsModelSchema.extend(SourceFields);
 
 export const DailyRoutineRequestSchema = z.object({
   city: CityNameSchema,
@@ -90,26 +90,26 @@ export const DailyRoutineRequestSchema = z.object({
   hasHouseholdProfile: z.boolean(),
   profile: HouseholdProfileSchema.nullable(),
   clarifyingAnswers: z.record(z.string().max(100), z.string().max(500)),
-  additionalContext: z.string().max(1500).nullable(),
+  additionalContext: z.string().max(3000).nullable(),
 });
 
-export const DailyRoutineResponseSchema = z.object({
-  routineHeadline: z.string().min(1),
+export const DailyRoutineModelSchema = z.object({
+  routineHeadline: z.string().trim().min(1),
   blocks: z.array(
     z.object({
-      id: z.string().min(1),
+      id: z.string().trim().min(1),
       timeBlock: TimeSlotSchema,
-      timeRange: z.string().min(1),
-      title: z.string().min(1),
-      recommendedAction: z.string().min(1),
-      whyThisMatters: z.string().min(1),
+      timeRange: z.string().trim().min(1),
+      title: z.string().trim().min(1),
+      recommendedAction: z.string().trim().min(1),
+      whyThisMatters: z.string().trim().min(1),
       protectionWeight: z.number().finite().min(0).max(100),
-      gearOrPrep: z.string().min(1),
+      gearOrPrep: z.string().trim(),
     }),
-  ).min(1).max(6),
-  dailySummaryNote: z.string().min(1),
-  ...SourceFields,
+  ).min(1),
+  dailySummaryNote: z.string().trim(),
 });
+export const DailyRoutineResponseSchema = DailyRoutineModelSchema.extend(SourceFields);
 
 export const IndoorProtocolRequestSchema = z.object({
   city: CityNameSchema,
@@ -119,30 +119,30 @@ export const IndoorProtocolRequestSchema = z.object({
   hasHouseholdProfile: z.boolean(),
   profile: HouseholdProfileSchema,
   indoorMeter: z.object({
-    outdoorPm25: z.number().finite().min(0).max(2000),
-    beforePm25: z.number().finite().min(0).max(2000),
-    afterPm25: z.number().finite().min(0).max(2000),
+    outdoorPm25: z.number().finite().min(0).max(5000),
+    beforePm25: z.number().finite().min(0).max(5000),
+    afterPm25: z.number().finite().min(0).max(5000),
     reductionPercent: z.number().finite().min(0).max(100),
-    appliedMeasures: z.array(z.string().max(250)).max(20),
+    appliedMeasures: z.array(z.string().max(400)).max(25),
   }),
-  additionalContext: z.string().max(1500).nullable(),
+  additionalContext: z.string().max(3000).nullable(),
   indoorAnswers: z.record(z.string().max(100), z.string().max(500)).optional(),
 });
 
-export const IndoorProtocolResponseSchema = z.object({
-  protocolHeadline: z.string().min(1),
+export const IndoorProtocolModelSchema = z.object({
+  protocolHeadline: z.string().trim().min(1),
   rooms: z.array(
     z.object({
       room: z.enum(['Living Room', 'Bedroom / Nursery', 'Kitchen']),
       priorityLevel: z.enum(['Critical', 'High', 'Moderate']),
-      hacks: z.array(z.string().min(1)).min(1).max(6),
-      costTier: z.string().min(1),
+      hacks: z.array(z.string().trim().min(1)).min(1),
+      costTier: z.string().trim(),
     }),
-  ).min(1).max(5),
-  plantRealityCheck: z.string().min(1),
-  budgetTip: z.string().min(1),
-  ...SourceFields,
+  ).min(1),
+  plantRealityCheck: z.string().trim().min(1),
+  budgetTip: z.string().trim(),
 });
+export const IndoorProtocolResponseSchema = IndoorProtocolModelSchema.extend(SourceFields);
 
 export const SmogShockRequestSchema = z.object({
   shockScenario: z.string().trim().min(1).max(500),
@@ -151,24 +151,24 @@ export const SmogShockRequestSchema = z.object({
   outdoorPm25: NonNegNullable,
   hasHouseholdProfile: z.boolean(),
   profile: HouseholdProfileSchema.nullable(),
-  activeRoutineHeadline: z.string().max(300).nullable(),
+  activeRoutineHeadline: z.string().max(500).nullable(),
 });
 
-export const SmogShockResponseSchema = z.object({
-  shockScenario: z.string().min(1),
-  severityAssessment: z.string().min(1),
+export const SmogShockModelSchema = z.object({
+  shockScenario: z.string().trim().min(1),
+  severityAssessment: z.string().trim().min(1),
   strategies: z.array(
     z.object({
-      id: z.string().min(1),
-      title: z.string().min(1),
+      id: z.string().trim().min(1),
+      title: z.string().trim().min(1),
       targetTimeBlock: TimeSlotSchema,
-      immediateAction: z.string().min(1),
-      healthAndEmissionImpact: z.string().min(1),
-      updatedRoutineTitle: z.string().min(1),
+      immediateAction: z.string().trim().min(1),
+      healthAndEmissionImpact: z.string().trim().min(1),
+      updatedRoutineTitle: z.string().trim().min(1),
     }),
-  ).min(1).max(5),
-  ...SourceFields,
+  ).min(1),
 });
+export const SmogShockResponseSchema = SmogShockModelSchema.extend(SourceFields);
 
 export const CommunityBriefingRequestSchema = z.object({
   city: CityNameSchema,
@@ -185,36 +185,21 @@ export const CommunityBriefingRequestSchema = z.object({
     pm25ExposureReductionPct: z.number().finite().min(0).max(100),
     monthlyRupeesSaved: z.number().finite().min(0).max(1_000_000),
   }),
-  routineHeadline: z.string().max(300).nullable(),
+  routineHeadline: z.string().max(500).nullable(),
 });
 
-export const CommunityBriefingResponseSchema = z.object({
-  executiveSnapshot: z.string().min(1),
-  whatsappAdvisory: z.string().min(1),
-  rwaNotice: z.string().min(1),
-  carpoolPitch: z.string().min(1),
-  ...SourceFields,
+export const CommunityBriefingModelSchema = z.object({
+  executiveSnapshot: z.string().trim().min(1),
+  whatsappAdvisory: z.string().trim().min(1),
+  rwaNotice: z.string().trim().min(1),
+  carpoolPitch: z.string().trim().min(1),
 });
+export const CommunityBriefingResponseSchema = CommunityBriefingModelSchema.extend(SourceFields);
 
 export const AI_ACTION_CONTRACTS = {
-  clarifyingQuestions: {
-    requestSchema: ClarifyingQuestionsRequestSchema,
-    responseSchema: ClarifyingQuestionsResponseSchema,
-  },
-  dailyRoutine: {
-    requestSchema: DailyRoutineRequestSchema,
-    responseSchema: DailyRoutineResponseSchema,
-  },
-  indoorProtocol: {
-    requestSchema: IndoorProtocolRequestSchema,
-    responseSchema: IndoorProtocolResponseSchema,
-  },
-  smogShock: {
-    requestSchema: SmogShockRequestSchema,
-    responseSchema: SmogShockResponseSchema,
-  },
-  communityBriefing: {
-    requestSchema: CommunityBriefingRequestSchema,
-    responseSchema: CommunityBriefingResponseSchema,
-  },
+  clarifyingQuestions: { requestSchema: ClarifyingQuestionsRequestSchema, responseSchema: ClarifyingQuestionsResponseSchema },
+  dailyRoutine: { requestSchema: DailyRoutineRequestSchema, responseSchema: DailyRoutineResponseSchema },
+  indoorProtocol: { requestSchema: IndoorProtocolRequestSchema, responseSchema: IndoorProtocolResponseSchema },
+  smogShock: { requestSchema: SmogShockRequestSchema, responseSchema: SmogShockResponseSchema },
+  communityBriefing: { requestSchema: CommunityBriefingRequestSchema, responseSchema: CommunityBriefingResponseSchema },
 } as const;

@@ -77,12 +77,18 @@ describe('Vercel API routes & Zod trust boundaries', () => {
     delete process.env.GEMINI_MODEL;
   });
 
-  it('handles /api/health GET and rejects POST with 405', () => {
+  it('handles /api/health GET with geminiConfigured/model and rejects POST with 405', () => {
     const res = createMockRes();
     healthHandler({ method: 'GET', headers: {} }, res);
     expect(res.statusCode).toBe(200);
     expect(res.headers['cache-control']).toBe('no-store');
-    expect((res.jsonBody as { status: string }).status).toBe('ok');
+    expect(res.jsonBody).toMatchObject({ status: 'ok', geminiConfigured: true, model: 'gemini-2.5-flash' });
+    expect(JSON.stringify(res.jsonBody)).not.toContain('test-secret-api-key-12345');
+
+    delete process.env.GEMINI_API_KEY;
+    const unconfiguredRes = createMockRes();
+    healthHandler({ method: 'GET', headers: {} }, unconfiguredRes);
+    expect((unconfiguredRes.jsonBody as { geminiConfigured: boolean }).geminiConfigured).toBe(false);
 
     const badRes = createMockRes();
     healthHandler({ method: 'POST', headers: {} }, badRes);
@@ -189,8 +195,8 @@ describe('Vercel API routes & Zod trust boundaries', () => {
 
     mockGenerateContentStream.mockResolvedValueOnce(
       (async function* () {
-        yield { text: '{"airContextNote":"Delhi 280",' };
-        yield { text: '"questions":[{"id":"q1","question":"Q?","reason":"R","quickOptions":["A","B","C"]}]}' };
+        yield { text: '```json\n{"airContextNote":"Delhi 280",' };
+        yield { text: '"questions":[{"id":"q1","question":"Q?","reason":"","quickOptions":["A","B","C"]}]}\n```' };
       })(),
     );
     const sseRes = createMockRes();
@@ -199,7 +205,8 @@ describe('Vercel API routes & Zod trust boundaries', () => {
     expect(sseRes.chunks.join('')).toContain('gemini-2.5-flash');
   });
 
-  it('rejects placeholder keys and returns secret-free 500 errors', async () => {
+  it('rejects placeholder keys and returns secret-free 500 errors and safe logs', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     process.env.GEMINI_API_KEY = 'your_google_ai_studio_api_key_here';
     const placeholderRes = createMockRes();
     await questionsHandler({ method: 'POST', headers: { 'content-type': 'application/json' }, body: VALID_QUESTIONS_REQ }, placeholderRes);
@@ -213,5 +220,8 @@ describe('Vercel API routes & Zod trust boundaries', () => {
     expect(secretRes.statusCode).toBe(500);
     expect(JSON.stringify(secretRes.jsonBody)).not.toContain('SUPER_SECRET_KEY_XYZ_987');
     expect(JSON.stringify(secretRes.jsonBody)).not.toContain('/secret/stack');
+    expect(errSpy).toHaveBeenCalled();
+    expect(errSpy.mock.calls.flat().join(' ')).not.toContain('SUPER_SECRET_KEY_XYZ_987');
+    errSpy.mockRestore();
   });
 });

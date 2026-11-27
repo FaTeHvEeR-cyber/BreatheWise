@@ -51,9 +51,7 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 }
 
 async function readStreamBody(req: ApiRequestLike): Promise<{ raw: string; tooLarge: boolean }> {
-  if (typeof req.on !== 'function') {
-    return { raw: '', tooLarge: false };
-  }
+  if (typeof req.on !== 'function') return { raw: '', tooLarge: false };
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let totalBytes = 0;
@@ -71,16 +69,10 @@ async function readStreamBody(req: ApiRequestLike): Promise<{ raw: string; tooLa
       chunks.push(buf);
     });
     req.on?.('end', () => {
-      if (!settled) {
-        settled = true;
-        resolve({ raw: Buffer.concat(chunks).toString('utf8'), tooLarge: false });
-      }
+      if (!settled) { settled = true; resolve({ raw: Buffer.concat(chunks).toString('utf8'), tooLarge: false }); }
     });
     req.on?.('error', (err: unknown) => {
-      if (!settled) {
-        settled = true;
-        reject(err);
-      }
+      if (!settled) { settled = true; reject(err); }
     });
   });
 }
@@ -89,16 +81,11 @@ type BodyParseResult =
   | { ok: true; data: Record<string, unknown> }
   | { ok: false; status: 400 | 413; error: string };
 
-async function extractAndValidateBody(
-  req: ApiRequestLike,
-  action: AiActionName,
-): Promise<BodyParseResult> {
+async function extractAndValidateBody(req: ApiRequestLike, action: AiActionName): Promise<BodyParseResult> {
   const lenHeader = getHeaderValue(req.headers, 'content-length');
-  if (lenHeader) {
-    const declaredBytes = Number.parseInt(lenHeader, 10);
-    if (Number.isFinite(declaredBytes) && declaredBytes > MAX_API_BODY_BYTES) {
-      return { ok: false, status: 413, error: 'Request payload exceeds 128 KB limit.' };
-    }
+  const declaredBytes = lenHeader ? Number.parseInt(lenHeader, 10) : 0;
+  if (Number.isFinite(declaredBytes) && declaredBytes > MAX_API_BODY_BYTES) {
+    return { ok: false, status: 413, error: 'Request payload exceeds 128 KB limit.' };
   }
 
   let parsedBody: unknown = req.body;
@@ -106,22 +93,14 @@ async function extractAndValidateBody(
     if (Buffer.byteLength(parsedBody, 'utf8') > MAX_API_BODY_BYTES) {
       return { ok: false, status: 413, error: 'Request payload exceeds 128 KB limit.' };
     }
-    try {
-      parsedBody = JSON.parse(parsedBody) as unknown;
-    } catch {
+    try { parsedBody = JSON.parse(parsedBody) as unknown; } catch {
       return { ok: false, status: 400, error: 'Invalid JSON request body.' };
     }
   } else if (parsedBody === undefined) {
     const streamed = await readStreamBody(req);
-    if (streamed.tooLarge) {
-      return { ok: false, status: 413, error: 'Request payload exceeds 128 KB limit.' };
-    }
-    if (!streamed.raw.trim()) {
-      return { ok: false, status: 400, error: 'Request body is required.' };
-    }
-    try {
-      parsedBody = JSON.parse(streamed.raw) as unknown;
-    } catch {
+    if (streamed.tooLarge) return { ok: false, status: 413, error: 'Request payload exceeds 128 KB limit.' };
+    if (!streamed.raw.trim()) return { ok: false, status: 400, error: 'Request body is required.' };
+    try { parsedBody = JSON.parse(streamed.raw) as unknown; } catch {
       return { ok: false, status: 400, error: 'Invalid JSON request body.' };
     }
   } else if (Buffer.byteLength(JSON.stringify(parsedBody), 'utf8') > MAX_API_BODY_BYTES) {
@@ -131,15 +110,9 @@ async function extractAndValidateBody(
   if (!isPlainRecord(parsedBody)) {
     return { ok: false, status: 400, error: 'Request body must be a JSON object.' };
   }
-
-  const contract = AI_ACTION_CONTRACTS[action];
-  const result = contract.requestSchema.safeParse(parsedBody);
+  const result = AI_ACTION_CONTRACTS[action].requestSchema.safeParse(parsedBody);
   if (!result.success) {
-    return {
-      ok: false,
-      status: 400,
-      error: 'Invalid request payload.',
-    };
+    return { ok: false, status: 400, error: 'Invalid request payload.' };
   }
   return { ok: true, data: result.data as Record<string, unknown> };
 }
@@ -159,6 +132,17 @@ function validatePostHeaders(req: ApiRequestLike, res: ApiResponseLike): boolean
   return true;
 }
 
+function logSafeAiError(action: string, err: unknown): void {
+  const errName = err instanceof Error ? err.name : 'Error';
+  let msg = err instanceof Error ? err.message : String(err);
+  const key = (process.env.GEMINI_API_KEY ?? '').trim();
+  if (key) {
+    msg = msg.split(key).join('[REDACTED]');
+  }
+  msg = msg.replace(/AIza[A-Za-z0-9_-]{8,}/g, '[REDACTED]').replace(/key=[^&\s]+/gi, 'key=[REDACTED]');
+  console.error('[BreatheWise AI]', action, errName, msg.slice(0, 160));
+}
+
 export function handleHealthRequest(req: ApiRequestLike, res: ApiResponseLike): void {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'GET') {
@@ -166,7 +150,13 @@ export function handleHealthRequest(req: ApiRequestLike, res: ApiResponseLike): 
     res.status(405).json({ error: 'Method Not Allowed. Use GET.' });
     return;
   }
-  res.status(200).json({ status: 'ok', app: 'BreatheWise', timestamp: new Date().toISOString() });
+  res.status(200).json({
+    status: 'ok',
+    app: 'BreatheWise',
+    timestamp: new Date().toISOString(),
+    geminiConfigured: Boolean((process.env.GEMINI_API_KEY ?? '').trim()),
+    model: (process.env.GEMINI_MODEL ?? '').trim() || 'gemini-2.5-flash',
+  });
 }
 
 export async function handleAiPostRequest(
@@ -184,7 +174,8 @@ export async function handleAiPostRequest(
     const rawResult = await ACTION_HANDLERS[action](bodyCheck.data);
     const validated = AI_ACTION_CONTRACTS[action].responseSchema.parse(rawResult);
     res.status(200).json(validated);
-  } catch {
+  } catch (err: unknown) {
+    logSafeAiError(action, err);
     res.status(500).json({
       error: 'AI advisor request failed. Please retry or use deterministic local guidance.',
     });
@@ -215,7 +206,7 @@ export async function handleQuestionsStreamRequest(
 
   const controller = new AbortController();
   res.on?.('close', () => {
-    if (!res.writableEnded) controller.abort();
+    if (res.writableEnded === false) controller.abort();
   });
 
   try {
@@ -226,7 +217,8 @@ export async function handleQuestionsStreamRequest(
     );
     const validated = AI_ACTION_CONTRACTS.clarifyingQuestions.responseSchema.parse(finalResponse);
     writeSseEvent(res, 'done', validated);
-  } catch {
+  } catch (err: unknown) {
+    logSafeAiError('clarifyingQuestions:stream', err);
     if (!controller.signal.aborted) {
       writeSseEvent(res, 'error', {
         error: 'AI stream temporarily unavailable. Falling back to deterministic local questions.',
