@@ -2,7 +2,7 @@ import {
   AI_ACTION_CONTRACTS,
   MAX_API_BODY_BYTES,
   type AiActionName,
-} from '../validation/aqiContracts';
+} from '../validation/aqiContracts.js';
 import {
   generateClarifyingQuestions,
   generateCommunityBriefing,
@@ -10,7 +10,7 @@ import {
   generateIndoorProtocol,
   simulateSmogShock,
   streamClarifyingQuestions,
-} from './geminiService';
+} from './geminiService.js';
 
 export interface ApiRequestLike {
   method?: string;

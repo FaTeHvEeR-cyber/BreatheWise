@@ -7,8 +7,8 @@ import {
   handleAiPostRequest,
   handleHealthRequest,
   handleQuestionsStreamRequest,
-} from './src/services/aiController';
-import { MAX_API_BODY_BYTES } from './src/validation/aqiContracts';
+} from './src/services/aiController.js';
+import { MAX_API_BODY_BYTES } from './src/validation/aqiContracts.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

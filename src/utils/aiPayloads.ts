@@ -2,9 +2,9 @@ import type {
   CpcbAqiResult,
   HouseholdProfile,
   LiveAirQualityData,
-} from '../types';
-import type { HabitSwapTotals, IndoorMitigationMeter } from './emissionsCalculator';
-import type { VentilationAnalysis } from './ventilationWindows';
+} from '../types.js';
+import type { HabitSwapTotals, IndoorMitigationMeter } from './emissionsCalculator.js';
+import type { VentilationAnalysis } from './ventilationWindows.js';
 
 export function buildClarifyingQuestionsPayload(
   liveData: LiveAirQualityData,

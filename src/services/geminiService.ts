@@ -7,24 +7,24 @@ import type {
   DailyRoutineResponse,
   IndoorProtocolResponse,
   SmogShockResponse,
-} from '../types';
+} from '../types.js';
 import {
   CLARIFYING_QUESTIONS_SCHEMA,
   COMMUNITY_BRIEFING_SCHEMA,
   DAILY_ROUTINE_SCHEMA,
   INDOOR_PROTOCOL_SCHEMA,
   SMOG_SHOCK_SCHEMA,
-} from './geminiSchemas';
+} from './geminiSchemas.js';
 import {
   ClarifyingQuestionsResponseSchema,
   CommunityBriefingResponseSchema,
   DailyRoutineResponseSchema,
   IndoorProtocolResponseSchema,
   SmogShockResponseSchema,
-} from '../validation/aqiContracts';
+} from '../validation/aqiContracts.js';
 
 const FALLBACK_MODEL = 'gemini-2.0-flash';
-const PER_ATTEMPT_TIMEOUT_MS = 15_000;
+const PER_ATTEMPT_TIMEOUT_MS = 20_000;
 const PLACEHOLDER_API_KEYS = new Set([
   'your_google_ai_studio_api_key_here',
   'MY_GEMINI_API_KEY',
