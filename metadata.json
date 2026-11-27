@@ -1,0 +1,8 @@
+{
+  "name": "BreatheWise — Urban Air Quality Assistant",
+  "description": "Live urban air quality intelligence with deterministic Indian CPCB National AQI computation, 24-hour ventilation scheduling, commute exposure vs. emissions trade-offs, and Gemini-powered interpretation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
