@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { useAirQualityApp } from './hooks/useAirQualityApp';
 import { Header } from './components/Header';
 import { LiveAqiRibbon } from './components/LiveAqiRibbon';
@@ -178,6 +179,8 @@ export default function App() {
         cpcb={app.cpcb}
         onClose={() => setAuditOpen(false)}
       />
+      
+      <Analytics />
     </div>
   );
 }
