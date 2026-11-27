@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import {
   buildExtraFallbackQuestions,
@@ -25,6 +25,8 @@ test('buildInitialIndoorQuestions returns 3 or fewer questions adapted to profil
 test('mergeUniqueQuestions appends up to 2 unique questions without duplicate IDs', () => {
   const initial = buildInitialIndoorQuestions(EMPTY_HOUSEHOLD_PROFILE, false);
   const extra = buildExtraFallbackQuestions(initial.length, 'indoor');
+  const intakeExtra = buildExtraFallbackQuestions(initial.length, 'intake');
+  assert.equal(intakeExtra.length, 2);
   const merged = mergeUniqueQuestions(initial, [initial[0], ...extra], 2);
   assert.equal(merged.length, initial.length + 2);
   const ids = new Set(merged.map((q) => q.id));

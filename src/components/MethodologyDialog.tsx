@@ -18,6 +18,7 @@ export function MethodologyDialog({
   onClose,
 }: MethodologyDialogProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -25,9 +26,13 @@ export function MethodologyDialog({
       return;
     }
     if (open && !dialog.open) {
+      previousFocusRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
       dialog.showModal();
     } else if (!open && dialog.open) {
       dialog.close();
+      previousFocusRef.current?.focus();
+      previousFocusRef.current = null;
     }
   }, [open]);
 
@@ -151,23 +156,23 @@ export function MethodologyDialog({
             <h3 className="text-sm font-semibold text-slate-900">Live Payload Audit (Auto-Refreshes Every 5 Min)</h3>
             <dl className="mt-2 grid grid-cols-1 gap-2 font-mono text-xs sm:grid-cols-2">
               <div>
-                <dt className="text-slate-500">Data Provider</dt>
+                <dt className="text-slate-600">Data Provider</dt>
                 <dd className="text-slate-900">{liveData.sourceName}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Reading Date & Time</dt>
+                <dt className="text-slate-600">Reading Date & Time</dt>
                 <dd className="text-slate-900 tabular-nums">
                   {reading.dateLabel} &nbsp; {reading.timeLabel}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Computed CPCB AQI</dt>
+                <dt className="text-slate-600">Computed CPCB AQI</dt>
                 <dd className="text-slate-900 tabular-nums">
                   {cpcb.aqi} ({cpcb.category.name}) · US EPA AQI: {liveData.current.us_aqi ?? '—'}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Last Refreshed</dt>
+                <dt className="text-slate-600">Last Refreshed</dt>
                 <dd className="text-slate-900 tabular-nums">
                   {refreshed.dateLabel} &nbsp; {refreshed.timeLabel}
                 </dd>

@@ -126,7 +126,12 @@ export function SmogShockSimulatorSection({
       {shockSlot.data && (
         <div className="mt-5 space-y-4">
           <div className="border border-slate-200 bg-slate-50 p-4 text-xs text-slate-800">
-            <strong className="font-semibold text-slate-900">Scenario:</strong> {shockSlot.data.shockScenario}
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <div><strong className="font-semibold text-slate-900">Scenario:</strong> {shockSlot.data.shockScenario}</div>
+              {shockSlot.data.source && (
+                <span className="font-mono text-[11px] text-slate-600">Source: {shockSlot.data.source}</span>
+              )}
+            </div>
             <p className="mt-1 leading-relaxed">{shockSlot.data.severityAssessment}</p>
           </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

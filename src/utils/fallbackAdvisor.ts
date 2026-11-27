@@ -17,6 +17,7 @@ export function buildFallbackQuestions(
   profile: HouseholdProfile,
 ): ClarifyingQuestionsResponse {
   return {
+    source: 'deterministic',
     sourceMode: 'fallback',
     airContextNote: `${liveData.location.name} is at CPCB AQI ${cpcb.aqi} (${cpcb.category.name}, dominant ${cpcb.dominantPollutant?.symbol ?? 'PM2.5'}). Confirm three household constraints so we tailor your daily routine.`,
     questions: [
@@ -74,6 +75,7 @@ export function buildFallbackRoutine(
   const membersLabel = profile.vulnerableMembers.trim() || 'all household members';
 
   return {
+    source: 'deterministic',
     sourceMode: 'fallback',
     routineHeadline: `${liveData.location.name} (CPCB AQI ${cpcb.aqi} · ${cpcb.category.name}) Low-Emission Routine for ${profileLabel}`,
     blocks: [
@@ -133,6 +135,7 @@ export function buildFallbackIndoorProtocol(
 ): IndoorProtocolResponse {
   const membersLabel = profile.vulnerableMembers.trim() || 'all household members';
   return {
+    source: 'deterministic',
     sourceMode: 'fallback',
     protocolHeadline: `${profile.hasPurifier ? 'HEPA-Assisted' : 'Budget Zero-Purifier'} Indoor Air Protocol for ${liveData.location.name} (CPCB AQI ${cpcb.aqi})`,
     rooms: [
@@ -184,6 +187,7 @@ export function buildFallbackShockStrategies(
   cpcb: CpcbAqiResult,
 ): SmogShockResponse {
   return {
+    source: 'deterministic',
     sourceMode: 'fallback',
     shockScenario,
     severityAssessment: `Immediate contingency response for "${shockScenario}" layered onto ${liveData.location.name}'s live baseline (CPCB AQI ${cpcb.aqi}).`,
@@ -231,6 +235,7 @@ export function buildFallbackCommunityBriefing(
     : '1 PM – 3 PM';
 
   return {
+    source: 'deterministic',
     sourceMode: 'fallback',
     executiveSnapshot: `${liveData.location.name} currently records Indian CPCB National AQI ${cpcb.aqi} (${cpcb.category.name}, dominant ${cpcb.dominantPollutant?.symbol ?? 'PM2.5'} at ${liveData.current.pm2_5?.toFixed(1) ?? '—'} µg/m³ as of ${liveData.readingIsoTime}). Best 3-hour airing window is ${bestWin}. Active low-emission swaps save ${swaps.weeklyCo2KgAvoided} kg CO₂/week and ₹${swaps.monthlyRupeesSaved.toLocaleString('en-IN')}/month.`,
     whatsappAdvisory: `Family Air Update (${liveData.location.name}): Live CPCB AQI is ${cpcb.aqi} (${cpcb.category.name}, PM2.5 ${liveData.current.pm2_5?.toFixed(1) ?? '—'} µg/m³). Please keep windows closed this morning, air out briefly between ${bestWin}, wet-mop instead of dry sweeping, and wear N95 masks if stepping out near main roads. Source: Open-Meteo (${liveData.readingIsoTime}).`,

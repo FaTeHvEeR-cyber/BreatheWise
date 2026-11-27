@@ -1,8 +1,11 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import {
   buildPm25ChartData,
   computeAirQualityTrajectory,
+  Pm25ForecastChart,
 } from './dataVisualization';
 import type { HourlyForecastPoint } from '../types';
 
@@ -55,4 +58,30 @@ test('computeAirQualityTrajectory detects improving, worsening, and steady trend
 
   const empty = computeAirQualityTrajectory([]);
   assert.equal(empty.avgPm25, 0);
+});
+
+test('Pm25ForecastChart renders empty state and 24h forecast with bestWindow', () => {
+  const emptyHtml = renderToStaticMarkup(
+    createElement(Pm25ForecastChart, { hourly24h: [], bestWindow: null }),
+  );
+  assert.ok(emptyHtml.includes('No 24-hour PM2.5 forecast series returned.'));
+
+  const series = buildSeries([120, 80, 45, 25, 30, 95]);
+  const chartHtml = renderToStaticMarkup(
+    createElement(Pm25ForecastChart, {
+      hourly24h: series,
+      bestWindow: {
+        startHourLabel: '03:00',
+        endHourLabel: '05:00',
+        startIndex: 3,
+        endIndex: 5,
+        avgPm25: 50,
+        peakPm25: 95,
+        minPm25: 25,
+        verdict: 'Brief Purge',
+      },
+    }),
+  );
+  assert.ok(chartHtml.includes('24-Hour Outdoor PM2.5 Forecast Trajectory'));
+  assert.ok(chartHtml.includes('03:00'));
 });

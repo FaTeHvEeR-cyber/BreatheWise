@@ -35,7 +35,7 @@ export default function App() {
         onOpenAudit={() => setAuditOpen(true)}
       />
 
-      <main id="main-content" className="mx-auto max-w-[1280px] space-y-6 px-4 py-6 md:px-6 md:py-8">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1280px] space-y-6 px-4 py-6 outline-none md:px-6 md:py-8">
         <LiveAqiRibbon
           location={app.location}
           liveData={app.liveData}

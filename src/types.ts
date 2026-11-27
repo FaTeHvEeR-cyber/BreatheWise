@@ -115,6 +115,7 @@ export interface ClarifyingQuestion {
 export interface ClarifyingQuestionsResponse {
   airContextNote: string;
   questions: ClarifyingQuestion[];
+  source?: string;
   sourceMode?: 'gemini' | 'fallback';
 }
 
@@ -133,6 +134,7 @@ export interface DailyRoutineResponse {
   routineHeadline: string;
   blocks: RoutineBlock[];
   dailySummaryNote: string;
+  source?: string;
   sourceMode?: 'gemini' | 'fallback';
 }
 
@@ -148,6 +150,7 @@ export interface IndoorProtocolResponse {
   rooms: RoomMitigationPlan[];
   plantRealityCheck: string;
   budgetTip: string;
+  source?: string;
   sourceMode?: 'gemini' | 'fallback';
 }
 
@@ -176,6 +179,7 @@ export interface SmogShockResponse {
   shockScenario: string;
   severityAssessment: string;
   strategies: SmogShockStrategy[];
+  source?: string;
   sourceMode?: 'gemini' | 'fallback';
 }
 
@@ -191,5 +195,6 @@ export interface CommunityBriefingResponse {
   whatsappAdvisory: string;
   rwaNotice: string;
   carpoolPitch: string;
+  source?: string;
   sourceMode?: 'gemini' | 'fallback';
 }

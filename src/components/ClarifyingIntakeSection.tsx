@@ -102,12 +102,17 @@ export function ClarifyingIntakeSection({
       {questionsSlot.data && (questionsSlot.data.airContextNote || questionsSlot.data.questions.length > 0) && (
         <div className="mt-5 space-y-5" aria-live="polite">
           {questionsSlot.data.airContextNote && (
-            <p className="text-sm text-slate-800">
-              {questionsSlot.data.airContextNote}
-              {questionsSlot.loading && questionsSlot.data.questions.length === 0 && (
-                <span aria-hidden="true" className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-teal-700 align-middle" />
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="text-sm text-slate-800">
+                {questionsSlot.data.airContextNote}
+                {questionsSlot.loading && questionsSlot.data.questions.length === 0 && (
+                  <span aria-hidden="true" className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-teal-700 align-middle" />
+                )}
+              </p>
+              {!questionsSlot.loading && questionsSlot.data.source && (
+                <span className="font-mono text-[11px] text-slate-600">Source: {questionsSlot.data.source}</span>
               )}
-            </p>
+            </div>
           )}
 
           <div className="divide-y divide-slate-200 border-t border-b border-slate-200">

@@ -135,9 +135,14 @@ export default function CommunityBriefingWorkspace({
         {communitySlot.data && (
           <div className="mt-5 space-y-5">
             <div className="border border-slate-200 bg-slate-50 p-4">
-              <p className="font-mono text-[11px] font-semibold text-teal-900 uppercase">
-                Executive Air-Health Snapshot
-              </p>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="font-mono text-[11px] font-semibold text-teal-900 uppercase">
+                  Executive Air-Health Snapshot
+                </p>
+                {communitySlot.data.source && (
+                  <span className="font-mono text-[11px] text-slate-600">Source: {communitySlot.data.source}</span>
+                )}
+              </div>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-900">
                 {communitySlot.data.executiveSnapshot}
               </p>

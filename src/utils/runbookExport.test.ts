@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { assembleRunbookPayload, formatRunbookMarkdown } from './runbookExport';
 import { EVALUATOR_SAMPLE_PROFILES } from '../data/breatheWisePresets';

@@ -147,7 +147,12 @@ export default function DailyRoutineWorkspace({
 
         {routineSlot.data && (
           <div className="mt-5 space-y-4">
-            <p className="text-sm font-medium text-slate-900">{routineSlot.data.routineHeadline}</p>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="text-sm font-medium text-slate-900">{routineSlot.data.routineHeadline}</p>
+              {routineSlot.data.source && (
+                <span className="font-mono text-[11px] text-slate-600">Source: {routineSlot.data.source}</span>
+              )}
+            </div>
             <div className="divide-y divide-slate-200 border border-slate-200">
               {routineSlot.data.blocks.map((block) => {
                 const checked = completedBlockIds.includes(block.id);

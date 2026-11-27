@@ -1,5 +1,6 @@
-import { GoogleGenAI, ThinkingLevel } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import type { Schema } from '@google/genai';
+import type { z } from 'zod';
 import type {
   ClarifyingQuestionsResponse,
   CommunityBriefingResponse,
@@ -13,19 +14,21 @@ import {
   DAILY_ROUTINE_SCHEMA,
   INDOOR_PROTOCOL_SCHEMA,
   SMOG_SHOCK_SCHEMA,
-} from './geminiSchemas.ts';
+} from './geminiSchemas';
+import {
+  ClarifyingQuestionsResponseSchema,
+  CommunityBriefingResponseSchema,
+  DailyRoutineResponseSchema,
+  IndoorProtocolResponseSchema,
+  SmogShockResponseSchema,
+} from '../validation/aqiContracts';
 
-interface ModelAttempt {
-  model: string;
-  thinkingLevel: ThinkingLevel;
-}
-
-const MODEL_CHAIN: readonly ModelAttempt[] = [
-  { model: 'gemini-3.1-flash-lite', thinkingLevel: ThinkingLevel.MINIMAL },
-  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW },
-];
-
-const PER_ATTEMPT_TIMEOUT_MS = 12_000;
+const FALLBACK_MODEL = 'gemini-2.0-flash';
+const PER_ATTEMPT_TIMEOUT_MS = 15_000;
+const PLACEHOLDER_API_KEYS = new Set([
+  'your_google_ai_studio_api_key_here',
+  'MY_GEMINI_API_KEY',
+]);
 
 const SYSTEM_INSTRUCTION = [
   'You are BreatheWise, a concise urban air-quality and low-emission advisor for Indian cities.',
@@ -43,21 +46,24 @@ const FAST_QUESTIONS_SYSTEM = [
 ].join(' ');
 
 let cachedClient: GoogleGenAI | null = null;
+let cachedApiKey: string | null = null;
+
+function getModelChain(): readonly string[] {
+  const configured = (process.env.GEMINI_MODEL ?? '').trim();
+  const primary = configured || 'gemini-2.5-flash';
+  return primary === FALLBACK_MODEL ? [primary] : [primary, FALLBACK_MODEL];
+}
 
 function getClient(): GoogleGenAI {
-  if (cachedClient) return cachedClient;
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey.trim().length === 0) {
-    throw new Error('GEMINI_API_KEY is not configured on the server.');
+  const apiKey = (process.env.GEMINI_API_KEY ?? '').trim();
+  if (!apiKey || PLACEHOLDER_API_KEYS.has(apiKey)) {
+    throw new Error('GEMINI_API_KEY is not configured.');
   }
-  cachedClient = new GoogleGenAI({
-    apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      },
-    },
-  });
+  if (cachedClient && cachedApiKey === apiKey) {
+    return cachedClient;
+  }
+  cachedApiKey = apiKey;
+  cachedClient = new GoogleGenAI({ apiKey });
   return cachedClient;
 }
 
@@ -100,25 +106,25 @@ function buildClarifyingQuestionsPrompt(context: Record<string, unknown>): strin
   return `Live air data & context:\n${JSON.stringify(context)}\nReturn 1 short airContextNote sentence and exactly ${count} crisp ${focus} clarifying questions with 3 short quickOptions each.${avoidNote}`;
 }
 
-async function generateStructuredJson<T>(
+async function generateStructuredJson<T extends Record<string, unknown>>(
   prompt: string,
   responseSchema: Schema,
+  contractSchema: z.ZodType<T>,
   systemInstruction: string = SYSTEM_INSTRUCTION,
-): Promise<T> {
+): Promise<T & { source: string; sourceMode: 'gemini' }> {
   const ai = getClient();
   let lastError: unknown;
 
-  for (const step of MODEL_CHAIN) {
+  for (const model of getModelChain()) {
     try {
       const response = await withTimeout(
         ai.models.generateContent({
-          model: step.model,
+          model,
           contents: prompt,
           config: {
             systemInstruction,
             responseMimeType: 'application/json',
             responseSchema,
-            thinkingConfig: { thinkingLevel: step.thinkingLevel },
           },
         }),
         PER_ATTEMPT_TIMEOUT_MS,
@@ -127,7 +133,8 @@ async function generateStructuredJson<T>(
       if (!rawText) {
         throw new Error('Gemini returned an empty response.');
       }
-      return JSON.parse(rawText) as T;
+      const validated = contractSchema.parse(JSON.parse(rawText));
+      return { ...validated, source: model, sourceMode: 'gemini' };
     } catch (err: unknown) {
       lastError = err;
       if (!isRetryableModelError(err)) {
@@ -147,7 +154,7 @@ export async function streamClarifyingQuestions(
   const prompt = buildClarifyingQuestionsPrompt(context);
   let lastError: unknown;
 
-  for (const step of MODEL_CHAIN) {
+  for (const model of getModelChain()) {
     if (signal?.aborted) {
       throw new Error('Request aborted by client.');
     }
@@ -156,13 +163,12 @@ export async function streamClarifyingQuestions(
     try {
       const stream = await withTimeout(
         ai.models.generateContentStream({
-          model: step.model,
+          model,
           contents: prompt,
           config: {
             systemInstruction: FAST_QUESTIONS_SYSTEM,
             responseMimeType: 'application/json',
             responseSchema: CLARIFYING_QUESTIONS_SCHEMA,
-            thinkingConfig: { thinkingLevel: step.thinkingLevel },
           },
         }),
         PER_ATTEMPT_TIMEOUT_MS,
@@ -184,8 +190,8 @@ export async function streamClarifyingQuestions(
       if (!rawText) {
         throw new Error('Gemini returned an empty stream.');
       }
-      const parsed = JSON.parse(rawText) as ClarifyingQuestionsResponse;
-      return { ...parsed, sourceMode: 'gemini' };
+      const validated = ClarifyingQuestionsResponseSchema.parse(JSON.parse(rawText));
+      return { ...validated, source: model, sourceMode: 'gemini' };
     } catch (err: unknown) {
       lastError = err;
       if (signal?.aborted || emittedAny || !isRetryableModelError(err)) {
@@ -197,46 +203,42 @@ export async function streamClarifyingQuestions(
   throw lastError instanceof Error ? lastError : new Error('Gemini service temporarily unavailable.');
 }
 
-export async function generateClarifyingQuestions(
+export function generateClarifyingQuestions(
   context: Record<string, unknown>,
 ): Promise<ClarifyingQuestionsResponse> {
   const prompt = buildClarifyingQuestionsPrompt(context);
-  const res = await generateStructuredJson<ClarifyingQuestionsResponse>(
+  return generateStructuredJson(
     prompt,
     CLARIFYING_QUESTIONS_SCHEMA,
+    ClarifyingQuestionsResponseSchema,
     FAST_QUESTIONS_SYSTEM,
   );
-  return { ...res, sourceMode: 'gemini' };
 }
 
-export async function generateDailyRoutine(
+export function generateDailyRoutine(
   context: Record<string, unknown>,
 ): Promise<DailyRoutineResponse> {
   const prompt = `Generate a concise 4-block daily routine (Morning, Midday, Evening, Night; protectionWeight summing to 100) strictly grounded in this live city AQI, 24h cleanest window, household profile (if specified), additionalContext, and clarifying answers:\n${JSON.stringify(context)}`;
-  const res = await generateStructuredJson<DailyRoutineResponse>(prompt, DAILY_ROUTINE_SCHEMA);
-  return { ...res, sourceMode: 'gemini' };
+  return generateStructuredJson(prompt, DAILY_ROUTINE_SCHEMA, DailyRoutineResponseSchema);
 }
 
-export async function generateIndoorProtocol(
+export function generateIndoorProtocol(
   context: Record<string, unknown>,
 ): Promise<IndoorProtocolResponse> {
   const prompt = `Generate a concise room-by-room indoor air mitigation protocol (Living Room, Bedroom / Nursery, Kitchen) tailored to this Indian home setup and live AQI. Note indoor plants supplement rather than replace filtration during severe smog:\n${JSON.stringify(context)}`;
-  const res = await generateStructuredJson<IndoorProtocolResponse>(prompt, INDOOR_PROTOCOL_SCHEMA);
-  return { ...res, sourceMode: 'gemini' };
+  return generateStructuredJson(prompt, INDOOR_PROTOCOL_SCHEMA, IndoorProtocolResponseSchema);
 }
 
-export async function simulateSmogShock(
+export function simulateSmogShock(
   context: Record<string, unknown>,
 ): Promise<SmogShockResponse> {
   const prompt = `Simulate this sudden smog shock scenario layered onto the household's live city AQI and active routine, returning 3 immediate fallback strategies that update specific routine blocks:\n${JSON.stringify(context)}`;
-  const res = await generateStructuredJson<SmogShockResponse>(prompt, SMOG_SHOCK_SCHEMA);
-  return { ...res, sourceMode: 'gemini' };
+  return generateStructuredJson(prompt, SMOG_SHOCK_SCHEMA, SmogShockResponseSchema);
 }
 
-export async function generateCommunityBriefing(
+export function generateCommunityBriefing(
   context: Record<string, unknown>,
 ): Promise<CommunityBriefingResponse> {
   const prompt = `Synthesize this live city CPCB AQI, active routine, and low-emission swap savings into an executive snapshot, WhatsApp family advisory, RWA/apartment society notice, and school/office carpool pitch:\n${JSON.stringify(context)}`;
-  const res = await generateStructuredJson<CommunityBriefingResponse>(prompt, COMMUNITY_BRIEFING_SCHEMA);
-  return { ...res, sourceMode: 'gemini' };
+  return generateStructuredJson(prompt, COMMUNITY_BRIEFING_SCHEMA, CommunityBriefingResponseSchema);
 }

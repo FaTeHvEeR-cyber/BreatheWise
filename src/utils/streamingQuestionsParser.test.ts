@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import {
   parsePartialClarifyingQuestions,
@@ -92,4 +92,21 @@ test('buildClarifyingQuestionsPayload stays compact and omits household when uns
   const withProfilePayload = buildClarifyingQuestionsPayload(liveData, cpcb, profile, true, 'asthma');
   assert.equal(typeof withProfilePayload.household, 'string');
   assert.equal(withProfilePayload.notes, 'asthma');
+
+  const {
+    buildCommunityBriefingPayload,
+    buildDailyRoutinePayload,
+    buildIndoorProtocolPayload,
+    buildSmogShockPayload,
+  } = await import('./aiPayloads');
+  const { analyzeVentilationWindows } = await import('./ventilationWindows');
+  const { calculateIndoorMitigationImpact } = await import('./emissionsCalculator');
+  const vent = analyzeVentilationWindows([], 145);
+  const meter = calculateIndoorMitigationImpact(145, profile);
+  const swaps = { selectedCount: 1, weeklyCo2KgAvoided: 12, annualCo2KgAvoided: 576, pm25ExposureReductionPct: 24, monthlyRupeesSaved: 1800, rows: [] };
+
+  assert.equal(buildDailyRoutinePayload(liveData, cpcb, vent, profile, true, { q1: 'Metro' }, 'note').city, 'Delhi');
+  assert.equal(buildIndoorProtocolPayload(liveData, cpcb, profile, false, meter, null, { 'in-1': 'Fan' }).city, 'Delhi');
+  assert.equal(buildSmogShockPayload('Power cut', liveData, cpcb, profile, false, null).shockScenario, 'Power cut');
+  assert.equal(buildCommunityBriefingPayload(liveData, cpcb, vent, profile, true, swaps, 'Headline').city, 'Delhi');
 });

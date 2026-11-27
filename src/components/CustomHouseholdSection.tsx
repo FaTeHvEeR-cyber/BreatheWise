@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CommuteMode, CookingFuel, HouseholdProfile } from '../types';
+import {
+  COMMUTE_OPTIONS,
+  FUEL_OPTIONS,
+  MAX_COMMUTE_KM,
+  MAX_ROOMS,
+} from '../data/breatheWisePresets';
 import { clampActiveRooms, finalizeIntegerInput } from '../utils/numericInput';
 import { IntegerInputField } from './IntegerInputField';
 
@@ -10,17 +16,6 @@ interface CustomHouseholdSectionProps {
   onSaveCustomProfile: (custom: HouseholdProfile) => void;
   onClearHousehold: () => void;
 }
-
-const COMMUTE_OPTIONS: ReadonlyArray<{ id: CommuteMode; label: string }> = [
-  { id: 'petrol_car', label: 'Petrol / Diesel Car' }, { id: 'metro', label: 'AC Metro / Rail' },
-  { id: 'two_wheeler', label: 'Two-Wheeler' }, { id: 'bus_auto', label: 'Bus / Auto' },
-  { id: 'walk_cycle', label: 'Walk / Cycle' }, { id: 'hybrid_wfh', label: 'Hybrid / Work from Home' },
-];
-const FUEL_OPTIONS: ReadonlyArray<{ id: CookingFuel; label: string }> = [
-  { id: 'lpg_gas', label: 'LPG Gas' }, { id: 'png_gas', label: 'PNG Piped Gas' }, { id: 'induction', label: 'Induction / Electric' },
-];
-const MAX_COMMUTE_KM = 200;
-const MAX_ROOMS = 20;
 
 export function CustomHouseholdSection({
   profile, hasHouseholdProfile, onSyncSetup, onSaveCustomProfile, onClearHousehold,
@@ -111,7 +106,7 @@ export function CustomHouseholdSection({
               value={draft.profileName}
               onChange={(e) => setDraft((d) => ({ ...d, profileName: e.target.value }))}
               placeholder="e.g., My 2BHK Family in Indirapuram"
-              className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-700 focus:bg-white focus:outline-none"
+              className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-teal-700 focus:bg-white focus:outline-none"
             />
           </div>
 
@@ -125,7 +120,7 @@ export function CustomHouseholdSection({
               value={draft.vulnerableMembers}
               onChange={(e) => setDraft((d) => ({ ...d, vulnerableMembers: e.target.value }))}
               placeholder="e.g., 2 adults, school-going child, elderly parent with asthma"
-              className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-700 focus:bg-white focus:outline-none"
+              className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-teal-700 focus:bg-white focus:outline-none"
             />
           </div>
 
@@ -139,7 +134,7 @@ export function CustomHouseholdSection({
               value={draft.personaSummary}
               onChange={(e) => setDraft((d) => ({ ...d, personaSummary: e.target.value }))}
               placeholder="e.g., 3rd-floor apartment near main road, morning school bus drop at 7:45 AM, evening walk habit"
-              className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-700 focus:bg-white focus:outline-none"
+              className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-teal-700 focus:bg-white focus:outline-none"
             />
           </div>
         </div>

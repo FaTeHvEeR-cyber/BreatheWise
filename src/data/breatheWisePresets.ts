@@ -1,9 +1,29 @@
 import type {
   CityLocation,
+  CommuteMode,
+  CookingFuel,
   EvaluatorSampleProfile,
   HabitSwapSpec,
   HouseholdProfile,
 } from '../types';
+
+export const COMMUTE_OPTIONS: ReadonlyArray<{ id: CommuteMode; label: string }> = [
+  { id: 'petrol_car', label: 'Petrol / Diesel Car' },
+  { id: 'metro', label: 'AC Metro / Rail' },
+  { id: 'two_wheeler', label: 'Two-Wheeler' },
+  { id: 'bus_auto', label: 'Bus / Auto' },
+  { id: 'walk_cycle', label: 'Walk / Cycle' },
+  { id: 'hybrid_wfh', label: 'Hybrid / Work from Home' },
+];
+
+export const FUEL_OPTIONS: ReadonlyArray<{ id: CookingFuel; label: string }> = [
+  { id: 'lpg_gas', label: 'LPG Gas' },
+  { id: 'png_gas', label: 'PNG Piped Gas' },
+  { id: 'induction', label: 'Induction / Electric' },
+];
+
+export const MAX_COMMUTE_KM = 200;
+export const MAX_ROOMS = 20;
 
 export const EMPTY_HOUSEHOLD_PROFILE: HouseholdProfile = {
   profileName: '',
