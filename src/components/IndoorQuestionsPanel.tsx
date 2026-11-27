@@ -20,14 +20,18 @@ export function IndoorQuestionsPanel({
   const answeredCount = questions.filter((q) => (answers[q.id] ?? '').trim().length > 0).length;
 
   return (
-    <section aria-label="Indoor air quality setup questions" className="border border-slate-200 bg-white p-6">
+    <section
+      aria-label="Indoor air quality setup questions"
+      className="border border-slate-200 bg-white p-6"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
           <h2 className="text-base font-semibold text-slate-900">
             Quick Indoor &amp; Budget-Mode Questions ({questions.length})
           </h2>
           <p className="text-xs text-slate-600">
-            Focused on details not already set in your household profile. Answer any below to sharpen your room-by-room protocol.
+            Focused on details not already set in your household profile. Answer any below to
+            sharpen your room-by-room protocol.
           </p>
         </div>
         <button
@@ -41,7 +45,10 @@ export function IndoorQuestionsPanel({
       </div>
 
       {moreError && (
-        <p role="status" className="mt-3 border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs text-amber-900">
+        <p
+          role="status"
+          className="mt-3 border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs text-amber-900"
+        >
           Gemini live note ({moreError}) — added 2 local indoor setup questions.
         </p>
       )}
@@ -57,7 +64,11 @@ export function IndoorQuestionsPanel({
                 </h3>
                 <p className="text-xs text-slate-600">{q.reason}</p>
               </div>
-              <div className="flex flex-wrap gap-2" role="group" aria-label={`Quick options for ${q.question}`}>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label={`Quick options for ${q.question}`}
+              >
                 {q.quickOptions.map((option) => {
                   const active = currentAnswer === option;
                   return (

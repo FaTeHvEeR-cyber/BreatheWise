@@ -22,8 +22,9 @@ export const FUEL_OPTIONS: ReadonlyArray<{ id: CookingFuel; label: string }> = [
   { id: 'induction', label: 'Induction / Electric' },
 ];
 
-export const MAX_COMMUTE_KM = 200;
-export const MAX_ROOMS = 20;
+import { MAX_COMMUTE_KM, MAX_ROOMS } from '../config/constants';
+
+export { MAX_COMMUTE_KM, MAX_ROOMS };
 
 export const EMPTY_HOUSEHOLD_PROFILE: HouseholdProfile = {
   profileName: '',
@@ -104,7 +105,8 @@ export const EVALUATOR_SAMPLE_PROFILES: readonly EvaluatorSampleProfile[] = [
     city: QUICK_INDIAN_CITIES[0],
     profile: {
       profileName: 'Delhi NCR Working Commuter',
-      personaSummary: 'Daily 22 km office commuter living in a high-rise apartment with one HEPA air purifier.',
+      personaSummary:
+        'Daily 22 km office commuter living in a high-rise apartment with one HEPA air purifier.',
       commuteDistanceKm: 22,
       commuteMode: 'petrol_car',
       cookingFuel: 'png_gas',
@@ -124,7 +126,8 @@ export const EVALUATOR_SAMPLE_PROFILES: readonly EvaluatorSampleProfile[] = [
     city: QUICK_INDIAN_CITIES[1],
     profile: {
       profileName: 'Noida Young Family with Toddler & Asthma-Sensitive Senior',
-      personaSummary: 'Multi-generational apartment household managing school drop-off, daily Indian gas cooking, and zero commercial HEPA purifiers.',
+      personaSummary:
+        'Multi-generational apartment household managing school drop-off, daily Indian gas cooking, and zero commercial HEPA purifiers.',
       commuteDistanceKm: 10,
       commuteMode: 'petrol_car',
       cookingFuel: 'lpg_gas',
@@ -144,7 +147,8 @@ export const EVALUATOR_SAMPLE_PROFILES: readonly EvaluatorSampleProfile[] = [
     city: QUICK_INDIAN_CITIES[2],
     profile: {
       profileName: 'Chandigarh / Jalandhar College Student',
-      personaSummary: 'Campus student riding a two-wheeler daily, living in a single PG/hostel room, and playing evening outdoor sports.',
+      personaSummary:
+        'Campus student riding a two-wheeler daily, living in a single PG/hostel room, and playing evening outdoor sports.',
       commuteDistanceKm: 14,
       commuteMode: 'two_wheeler',
       cookingFuel: 'induction',
@@ -164,7 +168,8 @@ export const EVALUATOR_SAMPLE_PROFILES: readonly EvaluatorSampleProfile[] = [
     city: QUICK_INDIAN_CITIES[3],
     profile: {
       profileName: 'Mumbai Coastal Apartment Household',
-      personaSummary: 'Hybrid-working couple in a sea-facing flat navigating winter coastal haze and balcony ventilation.',
+      personaSummary:
+        'Hybrid-working couple in a sea-facing flat navigating winter coastal haze and balcony ventilation.',
       commuteDistanceKm: 16,
       commuteMode: 'hybrid_wfh',
       cookingFuel: 'png_gas',
@@ -189,7 +194,8 @@ export const HABIT_SWAP_CATALOG: readonly HabitSwapSpec[] = [
     pm25ReductionPct: 26,
     monthlyRupeesBase: 3600,
     scalesWithCommuteKm: true,
-    mechanismNote: 'Eliminates tailpipe cold-start emissions and moves commuter out of kerbside exhaust plumes.',
+    mechanismNote:
+      'Eliminates tailpipe cold-start emissions and moves commuter out of kerbside exhaust plumes.',
   },
   {
     id: 'trip-chaining',
@@ -200,18 +206,21 @@ export const HABIT_SWAP_CATALOG: readonly HabitSwapSpec[] = [
     pm25ReductionPct: 11,
     monthlyRupeesBase: 1150,
     scalesWithCommuteKm: false,
-    mechanismNote: 'Short cold-engine urban trips emit up to 3× higher NOx and particulates per kilometer.',
+    mechanismNote:
+      'Short cold-engine urban trips emit up to 3× higher NOx and particulates per kilometer.',
   },
   {
     id: 'midday-venting',
     currentHabit: 'Opening balcony doors at 7 AM during winter thermal inversion',
-    sustainableSwap: 'Seal morning rooms; cross-ventilate strictly during Open-Meteo cleanest window',
+    sustainableSwap:
+      'Seal morning rooms; cross-ventilate strictly during Open-Meteo cleanest window',
     category: 'Ventilation',
     weeklyCo2KgBase: 1.2,
     pm25ReductionPct: 22,
     monthlyRupeesBase: 320,
     scalesWithCommuteKm: false,
-    mechanismNote: 'Avoids trapping peak morning inversion smog indoors and cuts purifier/AC filter load.',
+    mechanismNote:
+      'Avoids trapping peak morning inversion smog indoors and cuts purifier/AC filter load.',
   },
   {
     id: 'chimney-induction',
@@ -222,7 +231,8 @@ export const HABIT_SWAP_CATALOG: readonly HabitSwapSpec[] = [
     pm25ReductionPct: 19,
     monthlyRupeesBase: 540,
     scalesWithCommuteKm: false,
-    mechanismNote: 'Cooking spikes indoor PM2.5 above 300 µg/m³ and NO₂ indoors; exhaust + induction slashes indoor spikes.',
+    mechanismNote:
+      'Cooking spikes indoor PM2.5 above 300 µg/m³ and NO₂ indoors; exhaust + induction slashes indoor spikes.',
   },
   {
     id: 'wet-mop-seal',
@@ -233,7 +243,8 @@ export const HABIT_SWAP_CATALOG: readonly HabitSwapSpec[] = [
     pm25ReductionPct: 14,
     monthlyRupeesBase: 250,
     scalesWithCommuteKm: false,
-    mechanismNote: 'Prevents resuspension of settled PM10/PM2.5 road dust and cuts outdoor infiltration by ~20%.',
+    mechanismNote:
+      'Prevents resuspension of settled PM10/PM2.5 road dust and cuts outdoor infiltration by ~20%.',
   },
 ] as const;
 

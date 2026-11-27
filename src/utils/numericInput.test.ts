@@ -60,7 +60,10 @@ test('applyRoomProfilePatch never lets activeRoomCount exceed roomCount', () => 
   assert.equal(expanded.activeRoomCount, 5);
 
   // Raising total roomCount when user chose a subset preserves that subset (<= total)
-  const expandedSubset = applyRoomProfilePatch({ roomCount: 3, activeRoomCount: 1 }, { roomCount: 5 });
+  const expandedSubset = applyRoomProfilePatch(
+    { roomCount: 3, activeRoomCount: 1 },
+    { roomCount: 5 },
+  );
   assert.equal(expandedSubset.roomCount, 5);
   assert.equal(expandedSubset.activeRoomCount, 1);
 });

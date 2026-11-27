@@ -4,6 +4,7 @@ import type {
   LiveAirQualityData,
   RawPollutantReadings,
 } from '../types';
+import { OPEN_METEO_AIR_QUALITY_URL, OPEN_METEO_GEOCODING_URL } from '../config/constants';
 import { calculatePollutantSubIndex } from '../utils/cpcbAqi';
 import { formatHour12 } from '../utils/timeFormatting';
 
@@ -48,6 +49,7 @@ function toFiniteOrNull(val: number | null | undefined): number | null {
   return typeof val === 'number' && Number.isFinite(val) ? val : null;
 }
 
+/** Searches Indian and global cities via Open-Meteo Geocoding API, prioritizing India. */
 export async function searchIndianAndGlobalCities(
   query: string,
   signal?: AbortSignal,
@@ -64,7 +66,7 @@ export async function searchIndianAndGlobalCities(
     format: 'json',
   });
 
-  const url = `https://geocoding-api.open-meteo.com/v1/search?${params.toString()}`;
+  const url = `${OPEN_METEO_GEOCODING_URL}?${params.toString()}`;
   const response = await fetch(url, { signal, cache: 'no-store' });
   if (!response.ok) {
     throw new Error(`Open-Meteo Geocoding returned HTTP ${response.status}`);
@@ -91,6 +93,7 @@ export async function searchIndianAndGlobalCities(
   }));
 }
 
+/** Fetches live pollutant readings and 24-hour PM2.5 forecast from Open-Meteo. */
 export async function fetchLiveCityAirQuality(
   location: CityLocation,
   signal?: AbortSignal,
@@ -104,7 +107,7 @@ export async function fetchLiveCityAirQuality(
     timezone: location.timezone || 'Asia/Kolkata',
   });
 
-  const sourceUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?${params.toString()}`;
+  const sourceUrl = `${OPEN_METEO_AIR_QUALITY_URL}?${params.toString()}`;
   const response = await fetch(sourceUrl, { signal, cache: 'no-store' });
   if (!response.ok) {
     throw new Error(`Open-Meteo Air Quality API returned HTTP ${response.status}`);

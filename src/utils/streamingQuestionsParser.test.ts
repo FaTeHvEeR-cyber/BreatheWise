@@ -1,9 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import {
-  parsePartialClarifyingQuestions,
-  parseSseChunk,
-} from './streamingQuestionsParser';
+import { parsePartialClarifyingQuestions, parseSseChunk } from './streamingQuestionsParser';
 
 test('parsePartialClarifyingQuestions returns null for empty or key-only buffer', () => {
   assert.equal(parsePartialClarifyingQuestions(''), null);
@@ -60,10 +57,24 @@ test('parseSseChunk handles split frames across chunks', () => {
 test('buildClarifyingQuestionsPayload stays compact and omits household when unselected', async () => {
   const { buildClarifyingQuestionsPayload } = await import('./aiPayloads');
   const { computeCpcbAqi } = await import('./cpcbAqi');
-  const current = { pm2_5: 145, pm10: 240, nitrogen_dioxide: 42, ozone: 28, sulphur_dioxide: 12, us_aqi: 198 };
+  const current = {
+    pm2_5: 145,
+    pm10: 240,
+    nitrogen_dioxide: 42,
+    ozone: 28,
+    sulphur_dioxide: 12,
+    us_aqi: 198,
+  };
   const cpcb = computeCpcbAqi(current);
   const liveData = {
-    location: { id: 'delhi', name: 'Delhi', country: 'India', latitude: 28.6, longitude: 77.2, timezone: 'Asia/Kolkata' },
+    location: {
+      id: 'delhi',
+      name: 'Delhi',
+      country: 'India',
+      latitude: 28.6,
+      longitude: 77.2,
+      timezone: 'Asia/Kolkata',
+    },
     sourceName: 'Open-Meteo Air Quality API' as const,
     sourceUrl: 'https://air-quality-api.open-meteo.com/v1/air-quality',
     readingIsoTime: '2026-11-26T12:00',
@@ -89,7 +100,13 @@ test('buildClarifyingQuestionsPayload stays compact and omits household when uns
   assert.equal('notes' in noProfilePayload, false);
   assert.equal(noProfilePayload.city, 'Delhi');
 
-  const withProfilePayload = buildClarifyingQuestionsPayload(liveData, cpcb, profile, true, 'asthma');
+  const withProfilePayload = buildClarifyingQuestionsPayload(
+    liveData,
+    cpcb,
+    profile,
+    true,
+    'asthma',
+  );
   assert.equal(typeof withProfilePayload.household, 'string');
   assert.equal(withProfilePayload.notes, 'asthma');
 
@@ -103,10 +120,29 @@ test('buildClarifyingQuestionsPayload stays compact and omits household when uns
   const { calculateIndoorMitigationImpact } = await import('./emissionsCalculator');
   const vent = analyzeVentilationWindows([], 145);
   const meter = calculateIndoorMitigationImpact(145, profile);
-  const swaps = { selectedCount: 1, weeklyCo2KgAvoided: 12, annualCo2KgAvoided: 576, pm25ExposureReductionPct: 24, monthlyRupeesSaved: 1800, rows: [] };
+  const swaps = {
+    selectedCount: 1,
+    weeklyCo2KgAvoided: 12,
+    annualCo2KgAvoided: 576,
+    pm25ExposureReductionPct: 24,
+    monthlyRupeesSaved: 1800,
+    rows: [],
+  };
 
-  assert.equal(buildDailyRoutinePayload(liveData, cpcb, vent, profile, true, { q1: 'Metro' }, 'note').city, 'Delhi');
-  assert.equal(buildIndoorProtocolPayload(liveData, cpcb, profile, false, meter, null, { 'in-1': 'Fan' }).city, 'Delhi');
-  assert.equal(buildSmogShockPayload('Power cut', liveData, cpcb, profile, false, null).shockScenario, 'Power cut');
-  assert.equal(buildCommunityBriefingPayload(liveData, cpcb, vent, profile, true, swaps, 'Headline').city, 'Delhi');
+  assert.equal(
+    buildDailyRoutinePayload(liveData, cpcb, vent, profile, true, { q1: 'Metro' }, 'note').city,
+    'Delhi',
+  );
+  assert.equal(
+    buildIndoorProtocolPayload(liveData, cpcb, profile, false, meter, null, { 'in-1': 'Fan' }).city,
+    'Delhi',
+  );
+  assert.equal(
+    buildSmogShockPayload('Power cut', liveData, cpcb, profile, false, null).shockScenario,
+    'Power cut',
+  );
+  assert.equal(
+    buildCommunityBriefingPayload(liveData, cpcb, vent, profile, true, swaps, 'Headline').city,
+    'Delhi',
+  );
 });

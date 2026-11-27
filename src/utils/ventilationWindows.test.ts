@@ -1,9 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import {
-  analyzeVentilationWindows,
-  classifyVentilationHour,
-} from './ventilationWindows';
+import { analyzeVentilationWindows, classifyVentilationHour } from './ventilationWindows';
 import type { HourlyForecastPoint } from '../types';
 
 function makeHourlySeries(values: number[]): HourlyForecastPoint[] {

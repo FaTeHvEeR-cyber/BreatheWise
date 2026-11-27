@@ -7,6 +7,7 @@ export interface UseRovingTabsReturn<T extends string> {
   tabRefs: RefObject<Partial<Record<T, HTMLButtonElement | null>>>;
 }
 
+/** Provides WAI-ARIA roving tabindex keyboard navigation across workspace tabs. */
 export function useRovingTabs<T extends string>(
   tabs: readonly T[],
   onSelect: (tab: T) => void,

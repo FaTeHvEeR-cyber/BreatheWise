@@ -1,16 +1,13 @@
 import { z } from 'zod';
+import { CPCB_AQI_MAX, CPCB_AQI_MIN, MAX_API_BODY_BYTES } from '../config/constants.js';
 
-export const MAX_API_BODY_BYTES = 128 * 1024;
+export { MAX_API_BODY_BYTES };
 
 export type AiActionName =
-  | 'clarifyingQuestions'
-  | 'dailyRoutine'
-  | 'indoorProtocol'
-  | 'smogShock'
-  | 'communityBriefing';
+  'clarifyingQuestions' | 'dailyRoutine' | 'indoorProtocol' | 'smogShock' | 'communityBriefing';
 
 const CityNameSchema = z.string().trim().min(1).max(120);
-const AqiSchema = z.number().finite().min(0).max(500);
+const AqiSchema = z.number().finite().min(CPCB_AQI_MIN).max(CPCB_AQI_MAX);
 const NonNegNullable = z.number().finite().min(0).max(5000).nullable();
 const TimeSlotSchema = z.enum(['Morning', 'Midday', 'Evening', 'Night']);
 const SourceFields = {
@@ -22,7 +19,14 @@ const HouseholdProfileSchema = z.object({
   profileName: z.string().max(300),
   personaSummary: z.string().max(1000),
   commuteDistanceKm: z.number().finite().min(0).max(300),
-  commuteMode: z.enum(['petrol_car', 'metro', 'two_wheeler', 'bus_auto', 'walk_cycle', 'hybrid_wfh']),
+  commuteMode: z.enum([
+    'petrol_car',
+    'metro',
+    'two_wheeler',
+    'bus_auto',
+    'walk_cycle',
+    'hybrid_wfh',
+  ]),
   cookingFuel: z.enum(['lpg_gas', 'png_gas', 'induction']),
   hasPurifier: z.boolean(),
   hasKitchenExhaust: z.boolean(),
@@ -68,16 +72,19 @@ export const ClarifyingQuestionsRequestSchema = z.object({
 
 export const ClarifyingQuestionsModelSchema = z.object({
   airContextNote: z.string().trim().min(1),
-  questions: z.array(
-    z.object({
-      id: z.string().trim().min(1),
-      question: z.string().trim().min(1),
-      reason: z.string().trim(),
-      quickOptions: z.array(z.string().trim().min(1)).min(1),
-    }),
-  ).min(1),
+  questions: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1),
+        question: z.string().trim().min(1),
+        reason: z.string().trim(),
+        quickOptions: z.array(z.string().trim().min(1)).min(1),
+      }),
+    )
+    .min(1),
 });
-export const ClarifyingQuestionsResponseSchema = ClarifyingQuestionsModelSchema.extend(SourceFields);
+export const ClarifyingQuestionsResponseSchema =
+  ClarifyingQuestionsModelSchema.extend(SourceFields);
 
 export const DailyRoutineRequestSchema = z.object({
   city: CityNameSchema,
@@ -95,18 +102,20 @@ export const DailyRoutineRequestSchema = z.object({
 
 export const DailyRoutineModelSchema = z.object({
   routineHeadline: z.string().trim().min(1),
-  blocks: z.array(
-    z.object({
-      id: z.string().trim().min(1),
-      timeBlock: TimeSlotSchema,
-      timeRange: z.string().trim().min(1),
-      title: z.string().trim().min(1),
-      recommendedAction: z.string().trim().min(1),
-      whyThisMatters: z.string().trim().min(1),
-      protectionWeight: z.number().finite().min(0).max(100),
-      gearOrPrep: z.string().trim(),
-    }),
-  ).min(1),
+  blocks: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1),
+        timeBlock: TimeSlotSchema,
+        timeRange: z.string().trim().min(1),
+        title: z.string().trim().min(1),
+        recommendedAction: z.string().trim().min(1),
+        whyThisMatters: z.string().trim().min(1),
+        protectionWeight: z.number().finite().min(0).max(100),
+        gearOrPrep: z.string().trim(),
+      }),
+    )
+    .min(1),
   dailySummaryNote: z.string().trim(),
 });
 export const DailyRoutineResponseSchema = DailyRoutineModelSchema.extend(SourceFields);
@@ -131,14 +140,16 @@ export const IndoorProtocolRequestSchema = z.object({
 
 export const IndoorProtocolModelSchema = z.object({
   protocolHeadline: z.string().trim().min(1),
-  rooms: z.array(
-    z.object({
-      room: z.enum(['Living Room', 'Bedroom / Nursery', 'Kitchen']),
-      priorityLevel: z.enum(['Critical', 'High', 'Moderate']),
-      hacks: z.array(z.string().trim().min(1)).min(1),
-      costTier: z.string().trim(),
-    }),
-  ).min(1),
+  rooms: z
+    .array(
+      z.object({
+        room: z.enum(['Living Room', 'Bedroom / Nursery', 'Kitchen']),
+        priorityLevel: z.enum(['Critical', 'High', 'Moderate']),
+        hacks: z.array(z.string().trim().min(1)).min(1),
+        costTier: z.string().trim(),
+      }),
+    )
+    .min(1),
   plantRealityCheck: z.string().trim().min(1),
   budgetTip: z.string().trim(),
 });
@@ -157,16 +168,18 @@ export const SmogShockRequestSchema = z.object({
 export const SmogShockModelSchema = z.object({
   shockScenario: z.string().trim().min(1),
   severityAssessment: z.string().trim().min(1),
-  strategies: z.array(
-    z.object({
-      id: z.string().trim().min(1),
-      title: z.string().trim().min(1),
-      targetTimeBlock: TimeSlotSchema,
-      immediateAction: z.string().trim().min(1),
-      healthAndEmissionImpact: z.string().trim().min(1),
-      updatedRoutineTitle: z.string().trim().min(1),
-    }),
-  ).min(1),
+  strategies: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1),
+        title: z.string().trim().min(1),
+        targetTimeBlock: TimeSlotSchema,
+        immediateAction: z.string().trim().min(1),
+        healthAndEmissionImpact: z.string().trim().min(1),
+        updatedRoutineTitle: z.string().trim().min(1),
+      }),
+    )
+    .min(1),
 });
 export const SmogShockResponseSchema = SmogShockModelSchema.extend(SourceFields);
 
@@ -197,9 +210,21 @@ export const CommunityBriefingModelSchema = z.object({
 export const CommunityBriefingResponseSchema = CommunityBriefingModelSchema.extend(SourceFields);
 
 export const AI_ACTION_CONTRACTS = {
-  clarifyingQuestions: { requestSchema: ClarifyingQuestionsRequestSchema, responseSchema: ClarifyingQuestionsResponseSchema },
-  dailyRoutine: { requestSchema: DailyRoutineRequestSchema, responseSchema: DailyRoutineResponseSchema },
-  indoorProtocol: { requestSchema: IndoorProtocolRequestSchema, responseSchema: IndoorProtocolResponseSchema },
+  clarifyingQuestions: {
+    requestSchema: ClarifyingQuestionsRequestSchema,
+    responseSchema: ClarifyingQuestionsResponseSchema,
+  },
+  dailyRoutine: {
+    requestSchema: DailyRoutineRequestSchema,
+    responseSchema: DailyRoutineResponseSchema,
+  },
+  indoorProtocol: {
+    requestSchema: IndoorProtocolRequestSchema,
+    responseSchema: IndoorProtocolResponseSchema,
+  },
   smogShock: { requestSchema: SmogShockRequestSchema, responseSchema: SmogShockResponseSchema },
-  communityBriefing: { requestSchema: CommunityBriefingRequestSchema, responseSchema: CommunityBriefingResponseSchema },
+  communityBriefing: {
+    requestSchema: CommunityBriefingRequestSchema,
+    responseSchema: CommunityBriefingResponseSchema,
+  },
 } as const;

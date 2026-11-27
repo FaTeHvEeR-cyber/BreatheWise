@@ -1,11 +1,8 @@
-import type {
-  CpcbAqiResult,
-  HouseholdProfile,
-  LiveAirQualityData,
-} from '../types.js';
+import type { CpcbAqiResult, HouseholdProfile, LiveAirQualityData } from '../types.js';
 import type { HabitSwapTotals, IndoorMitigationMeter } from './emissionsCalculator.js';
 import type { VentilationAnalysis } from './ventilationWindows.js';
 
+/** Builds compact context payload for clarifying intake questions. */
 export function buildClarifyingQuestionsPayload(
   liveData: LiveAirQualityData,
   cpcb: CpcbAqiResult,
@@ -29,6 +26,7 @@ export function buildClarifyingQuestionsPayload(
   };
 }
 
+/** Builds payload for generating the 4-block low-emission daily routine. */
 export function buildDailyRoutinePayload(
   liveData: LiveAirQualityData,
   cpcb: CpcbAqiResult,
@@ -53,6 +51,7 @@ export function buildDailyRoutinePayload(
   };
 }
 
+/** Builds payload for generating the room-by-room indoor mitigation protocol. */
 export function buildIndoorProtocolPayload(
   liveData: LiveAirQualityData,
   cpcb: CpcbAqiResult,
@@ -78,6 +77,7 @@ export function buildIndoorProtocolPayload(
   };
 }
 
+/** Builds payload for simulating sudden smog shock contingencies. */
 export function buildSmogShockPayload(
   shockScenario: string,
   liveData: LiveAirQualityData,
@@ -97,6 +97,7 @@ export function buildSmogShockPayload(
   };
 }
 
+/** Builds payload for generating shareable family, RWA, and carpool briefings. */
 export function buildCommunityBriefingPayload(
   liveData: LiveAirQualityData,
   cpcb: CpcbAqiResult,

@@ -5,7 +5,11 @@ import { EVALUATOR_SAMPLE_PROFILES } from '../data/breatheWisePresets';
 import { computeCpcbAqi } from './cpcbAqi';
 import { analyzeVentilationWindows } from './ventilationWindows';
 import { calculateHabitSwapImpact, calculateIndoorMitigationImpact } from './emissionsCalculator';
-import { buildFallbackCommunityBriefing, buildFallbackIndoorProtocol, buildFallbackRoutine } from './fallbackAdvisor';
+import {
+  buildFallbackCommunityBriefing,
+  buildFallbackIndoorProtocol,
+  buildFallbackRoutine,
+} from './fallbackAdvisor';
 import type { LiveAirQualityData } from '../types';
 
 test('runbook export assembles deterministic payload and printable markdown', () => {
@@ -16,7 +20,14 @@ test('runbook export assembles deterministic payload and printable markdown', ()
     sourceUrl: 'https://air-quality-api.open-meteo.com/v1/air-quality',
     readingIsoTime: '2026-11-26T08:00',
     fetchedAtIso: '2026-11-26T08:05:00.000Z',
-    current: { pm2_5: 145, pm10: 210, nitrogen_dioxide: 48, ozone: 32, sulphur_dioxide: 14, us_aqi: 198 },
+    current: {
+      pm2_5: 145,
+      pm10: 210,
+      nitrogen_dioxide: 48,
+      ozone: 32,
+      sulphur_dioxide: 14,
+      us_aqi: 198,
+    },
     hourly24h: Array.from({ length: 12 }, (_, idx) => ({
       isoTime: `2026-11-26T${String(idx).padStart(2, '0')}:00`,
       hourLabel: `${String(idx).padStart(2, '0')}:00`,
@@ -29,11 +40,24 @@ test('runbook export assembles deterministic payload and printable markdown', ()
 
   const cpcb = computeCpcbAqi(liveData.current);
   const ventilation = analyzeVentilationWindows(liveData.hourly24h, liveData.current.pm2_5 ?? 0);
-  const indoorMitigation = calculateIndoorMitigationImpact(liveData.current.pm2_5 ?? 0, sample.profile);
-  const swapTotals = calculateHabitSwapImpact(sample.defaultSwapIds, sample.profile.commuteDistanceKm, 145);
+  const indoorMitigation = calculateIndoorMitigationImpact(
+    liveData.current.pm2_5 ?? 0,
+    sample.profile,
+  );
+  const swapTotals = calculateHabitSwapImpact(
+    sample.defaultSwapIds,
+    sample.profile.commuteDistanceKm,
+    145,
+  );
   const routine = buildFallbackRoutine(liveData, cpcb, sample.profile, ventilation);
   const indoorProtocol = buildFallbackIndoorProtocol(liveData, cpcb, sample.profile);
-  const communityBriefing = buildFallbackCommunityBriefing(liveData, cpcb, sample.profile, ventilation, swapTotals);
+  const communityBriefing = buildFallbackCommunityBriefing(
+    liveData,
+    cpcb,
+    sample.profile,
+    ventilation,
+    swapTotals,
+  );
 
   const payload = assembleRunbookPayload({
     liveData,

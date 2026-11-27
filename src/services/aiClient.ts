@@ -5,10 +5,7 @@ import type {
   IndoorProtocolResponse,
   SmogShockResponse,
 } from '../types';
-import {
-  parsePartialClarifyingQuestions,
-  parseSseChunk,
-} from '../utils/streamingQuestionsParser';
+import { parsePartialClarifyingQuestions, parseSseChunk } from '../utils/streamingQuestionsParser';
 
 interface ApiErrorPayload {
   error?: string;
@@ -39,6 +36,7 @@ async function postGeminiRoute<T>(
   return (await response.json()) as T;
 }
 
+/** Streams clarifying questions via SSE and invokes onPartial as JSON fields complete. */
 export async function streamClarifyingQuestionsClient(
   payload: Record<string, unknown>,
   onPartial: (partial: ClarifyingQuestionsResponse) => void,
@@ -111,6 +109,7 @@ export async function streamClarifyingQuestionsClient(
   throw new Error('Gemini stream ended without clarifying questions.');
 }
 
+/** Requests non-streaming clarifying questions from /api/gemini/questions. */
 export function callClarifyingQuestions(
   payload: Record<string, unknown>,
   signal?: AbortSignal,
@@ -118,6 +117,7 @@ export function callClarifyingQuestions(
   return postGeminiRoute<ClarifyingQuestionsResponse>('/api/gemini/questions', payload, signal);
 }
 
+/** Requests a personalized 4-block daily routine from /api/gemini/routine. */
 export function callDailyRoutine(
   payload: Record<string, unknown>,
   signal?: AbortSignal,
@@ -125,6 +125,7 @@ export function callDailyRoutine(
   return postGeminiRoute<DailyRoutineResponse>('/api/gemini/routine', payload, signal);
 }
 
+/** Requests a room-by-room indoor protocol from /api/gemini/indoor. */
 export function callIndoorProtocol(
   payload: Record<string, unknown>,
   signal?: AbortSignal,
@@ -132,6 +133,7 @@ export function callIndoorProtocol(
   return postGeminiRoute<IndoorProtocolResponse>('/api/gemini/indoor', payload, signal);
 }
 
+/** Requests emergency smog-shock strategies from /api/gemini/shock. */
 export function callSmogShock(
   payload: Record<string, unknown>,
   signal?: AbortSignal,
@@ -139,6 +141,7 @@ export function callSmogShock(
   return postGeminiRoute<SmogShockResponse>('/api/gemini/shock', payload, signal);
 }
 
+/** Requests shareable family, RWA, and carpool advisories from /api/gemini/community. */
 export function callCommunityBriefing(
   payload: Record<string, unknown>,
   signal?: AbortSignal,

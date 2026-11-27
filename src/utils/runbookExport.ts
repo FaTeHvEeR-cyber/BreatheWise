@@ -35,6 +35,7 @@ export interface MasterRunbookPayload {
   communityBriefing: CommunityBriefingResponse | null;
 }
 
+/** Assembles a complete Master Clean-Air Runbook payload for JSON/Markdown export. */
 export function assembleRunbookPayload(params: {
   liveData: LiveAirQualityData;
   cpcb: CpcbAqiResult;
@@ -81,6 +82,7 @@ export function assembleRunbookPayload(params: {
   };
 }
 
+/** Formats a Master Clean-Air Runbook payload as printable Markdown. */
 export function formatRunbookMarkdown(runbook: MasterRunbookPayload): string {
   const lines: string[] = [
     `# BreatheWise — Master Clean-Air Runbook`,
@@ -143,6 +145,7 @@ export function formatRunbookMarkdown(runbook: MasterRunbookPayload): string {
   return lines.join('\n');
 }
 
+/** Triggers a browser file download from an in-memory string payload. */
 export function triggerFileDownload(filename: string, content: string, mimeType: string): void {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);

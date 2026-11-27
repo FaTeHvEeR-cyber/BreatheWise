@@ -64,5 +64,7 @@ test('linear CPCB scale segments reflect exact 0-500 band widths and place AQI 3
   const veryPoor = segments.find((s) => s.category.name === 'Very Poor');
   assert.ok(veryPoor);
   assert.equal(veryPoor.startPercent, 60);
-  assert.ok(pos342 > veryPoor.startPercent && pos342 < veryPoor.startPercent + veryPoor.widthPercent);
+  assert.ok(
+    pos342 > veryPoor.startPercent && pos342 < veryPoor.startPercent + veryPoor.widthPercent,
+  );
 });

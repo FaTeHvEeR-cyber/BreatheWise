@@ -11,6 +11,7 @@ export interface UseCitySearchReturn {
   clearSearch: () => void;
 }
 
+/** Debounced Open-Meteo city geocoding search hook with request cancellation. */
 export function useCitySearch(): UseCitySearchReturn {
   const [query, setQuery] = useState<string>('');
   const [results, setResults] = useState<CityLocation[]>([]);

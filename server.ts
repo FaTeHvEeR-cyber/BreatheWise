@@ -21,28 +21,51 @@ interface ExpressBodyError extends Error {
 
 async function startServer(): Promise<void> {
   const app = express();
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=()');
+    next();
+  });
   app.use(express.json({ limit: MAX_API_BODY_BYTES }));
 
-  app.use((err: ExpressBodyError, _req: express.Request, res: express.Response, next: express.NextFunction) => {
-    res.setHeader('Cache-Control', 'no-store');
-    if (err.type === 'entity.too.large' || err.status === 413) {
-      res.status(413).json({ error: 'Request payload exceeds 128 KB limit.' });
-      return;
-    }
-    if (err instanceof SyntaxError && err.status === 400) {
-      res.status(400).json({ error: 'Invalid JSON request body.' });
-      return;
-    }
-    next(err);
-  });
+  app.use(
+    (
+      err: ExpressBodyError,
+      _req: express.Request,
+      res: express.Response,
+      next: express.NextFunction,
+    ) => {
+      res.setHeader('Cache-Control', 'no-store');
+      if (err.type === 'entity.too.large' || err.status === 413) {
+        res.status(413).json({ error: 'Request payload exceeds 128 KB limit.' });
+        return;
+      }
+      if (err instanceof SyntaxError && err.status === 400) {
+        res.status(400).json({ error: 'Invalid JSON request body.' });
+        return;
+      }
+      next(err);
+    },
+  );
 
   app.all('/api/health', (req, res) => handleHealthRequest(req, res));
-  app.all('/api/gemini/questions/stream', (req, res) => void handleQuestionsStreamRequest(req, res));
-  app.all('/api/gemini/questions', (req, res) => void handleAiPostRequest(req, res, 'clarifyingQuestions'));
+  app.all(
+    '/api/gemini/questions/stream',
+    (req, res) => void handleQuestionsStreamRequest(req, res),
+  );
+  app.all(
+    '/api/gemini/questions',
+    (req, res) => void handleAiPostRequest(req, res, 'clarifyingQuestions'),
+  );
   app.all('/api/gemini/routine', (req, res) => void handleAiPostRequest(req, res, 'dailyRoutine'));
   app.all('/api/gemini/indoor', (req, res) => void handleAiPostRequest(req, res, 'indoorProtocol'));
   app.all('/api/gemini/shock', (req, res) => void handleAiPostRequest(req, res, 'smogShock'));
-  app.all('/api/gemini/community', (req, res) => void handleAiPostRequest(req, res, 'communityBriefing'));
+  app.all(
+    '/api/gemini/community',
+    (req, res) => void handleAiPostRequest(req, res, 'communityBriefing'),
+  );
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

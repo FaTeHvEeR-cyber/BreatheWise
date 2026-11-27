@@ -1,16 +1,20 @@
 import type {
   ClarifyingQuestionsResponse,
-  CommunityBriefingResponse,
   CpcbAqiResult,
   DailyRoutineResponse,
   HouseholdProfile,
   IndoorProtocolResponse,
   LiveAirQualityData,
-  SmogShockResponse,
 } from '../types';
 import type { VentilationAnalysis } from './ventilationWindows';
-import type { HabitSwapTotals } from './emissionsCalculator';
+import {
+  buildFallbackCommunityBriefing,
+  buildFallbackShockStrategies,
+} from './fallbackCommunityAdvisor';
 
+export { buildFallbackCommunityBriefing, buildFallbackShockStrategies };
+
+/** Builds deterministic clarifying intake questions when live AI is unavailable. */
 export function buildFallbackQuestions(
   liveData: LiveAirQualityData,
   cpcb: CpcbAqiResult,
@@ -57,6 +61,7 @@ export function buildFallbackQuestions(
   };
 }
 
+/** Builds a deterministic 4-block daily routine grounded in live Open-Meteo data. */
 export function buildFallbackRoutine(
   liveData: LiveAirQualityData,
   cpcb: CpcbAqiResult,
@@ -83,13 +88,17 @@ export function buildFallbackRoutine(
         id: 'blk-morning',
         timeBlock: 'Morning',
         timeRange: '6:30 AM – 10:30 AM',
-        title: severeOrPoor ? 'Seal Morning Inversion & Protected Commute' : 'Low-Exposure Morning Start',
+        title: severeOrPoor
+          ? 'Seal Morning Inversion & Protected Commute'
+          : 'Low-Exposure Morning Start',
         recommendedAction: severeOrPoor
           ? `Keep windows closed during peak inversion (${worstWin}). Swap outdoor exercise indoors and take AC metro/carpool or wear a tight-fit N95 for your ${profile.commuteDistanceKm} km route.`
           : `Complete light outdoor commute or errands before peak traffic; favor transit/carpool over solo petrol driving.`,
         whyThisMatters: `Reduces morning PM2.5 inhalation by ~40–48% during kerbside traffic peaks (live PM2.5 ${liveData.current.pm2_5?.toFixed(1) ?? '—'} µg/m³) while cutting cold-start CO₂.`,
         protectionWeight: 30,
-        gearOrPrep: severeOrPoor ? 'Certified N95/FFP2 respirator + closed-cabin recirculation' : 'Reusable cloth/surgical mask if near arterial road',
+        gearOrPrep: severeOrPoor
+          ? 'Certified N95/FFP2 respirator + closed-cabin recirculation'
+          : 'Reusable cloth/surgical mask if near arterial road',
       },
       {
         id: 'blk-midday',
@@ -97,7 +106,8 @@ export function buildFallbackRoutine(
         timeRange: bestWin,
         title: `Cleanest-Window Cross-Ventilation (${bestWin})`,
         recommendedAction: `Open opposite windows for 15–20 minutes during the lowest forecast PM2.5 trough (${bestWin}, avg ${ventilation.bestWindow?.avgPm25.toFixed(1) ?? '—'} µg/m³) to flush stale indoor CO₂, then reseal.`,
-        whyThisMatters: 'Refreshes oxygen and cuts indoor CO₂ buildup with minimal particulate infiltration compared to 7 AM airing.',
+        whyThisMatters:
+          'Refreshes oxygen and cuts indoor CO₂ buildup with minimal particulate infiltration compared to 7 AM airing.',
         protectionWeight: 25,
         gearOrPrep: 'Exhaust fan assist + wet microfiber floor wipe',
       },
@@ -107,9 +117,12 @@ export function buildFallbackRoutine(
         timeRange: '5:30 PM – 9:00 PM',
         title: 'Low-Smoke Cooking & Zero-Idle Errands',
         recommendedAction: `Batch grocery runs into a single trip and run kitchen exhaust/chimney (or shift boiling to induction) during dinner prep so cooking plumes do not compound evening smog.`,
-        whyThisMatters: 'Prevents indoor kitchen PM2.5 spikes above 250 µg/m³ and cuts short-trip tailpipe NOx emissions.',
+        whyThisMatters:
+          'Prevents indoor kitchen PM2.5 spikes above 250 µg/m³ and cuts short-trip tailpipe NOx emissions.',
         protectionWeight: 25,
-        gearOrPrep: profile.hasKitchenExhaust ? 'Chimney on high + 5-min post-cooking run' : 'Lid on pans + kitchen exhaust/window purge',
+        gearOrPrep: profile.hasKitchenExhaust
+          ? 'Chimney on high + 5-min post-cooking run'
+          : 'Lid on pans + kitchen exhaust/window purge',
       },
       {
         id: 'blk-night',
@@ -121,13 +134,16 @@ export function buildFallbackRoutine(
           : 'Seal bedroom door gaps with damp/rolled cotton draft stoppers, wet-wipe bedside surfaces, and keep windows latched overnight.',
         whyThisMatters: `Protects ${membersLabel} during 8 hours of nocturnal temperature inversion when ambient PM2.5 concentrates near ground level.`,
         protectionWeight: 20,
-        gearOrPrep: profile.hasPurifier ? 'HEPA purifier 30 cm clear of walls' : 'Rolled towel draft stopper + saline nasal rinse',
+        gearOrPrep: profile.hasPurifier
+          ? 'HEPA purifier 30 cm clear of walls'
+          : 'Rolled towel draft stopper + saline nasal rinse',
       },
     ],
     dailySummaryNote: `Grounded strictly in live Open-Meteo telemetry for ${liveData.location.name} (${liveData.readingIsoTime}).`,
   };
 }
 
+/** Builds a deterministic room-by-room indoor air mitigation protocol. */
 export function buildFallbackIndoorProtocol(
   liveData: LiveAirQualityData,
   cpcb: CpcbAqiResult,
@@ -177,69 +193,7 @@ export function buildFallbackIndoorProtocol(
     ],
     plantRealityCheck:
       'Hardy indoor plants (Snake Plant, Areca Palm, Peace Lily) improve room humidity and comfort, but peer-reviewed chamber studies confirm plants cannot meaningfully lower PM2.5 during Poor/Severe smog—always treat them as a supplement to sealing and HEPA/exhaust filtration.',
-    budgetTip: 'A ₹200 foam weatherstrip tape around leaky window frames often cuts outdoor dust infiltration by 15–25%.',
-  };
-}
-
-export function buildFallbackShockStrategies(
-  shockScenario: string,
-  liveData: LiveAirQualityData,
-  cpcb: CpcbAqiResult,
-): SmogShockResponse {
-  return {
-    source: 'deterministic',
-    sourceMode: 'fallback',
-    shockScenario,
-    severityAssessment: `Immediate contingency response for "${shockScenario}" layered onto ${liveData.location.name}'s live baseline (CPCB AQI ${cpcb.aqi}).`,
-    strategies: [
-      {
-        id: 'shock-1',
-        title: 'Emergency Clean-Room Consolidation',
-        targetTimeBlock: 'Night',
-        immediateAction:
-          'Consolidate family members into the smallest interior room with fewest exterior windows, seal door undercuts with damp towels, and eliminate all indoor combustion (candles, incense, gas frying).',
-        healthAndEmissionImpact: 'Cuts passive indoor PM2.5 infiltration by ~35–40% even without active electricity.',
-        updatedRoutineTitle: 'Shock Override: Sealed Clean-Room Sanctuary',
-      },
-      {
-        id: 'shock-2',
-        title: 'Peak-Window Deferral & Fit-Checked N95 Protocol',
-        targetTimeBlock: 'Morning',
-        immediateAction:
-          'Defer non-urgent outdoor errands past 12:30 PM; if mandatory travel cannot wait, wear a nose-pinched N95/FFP2 respirator, avoid walking beside idling traffic, and use closed AC transit.',
-        healthAndEmissionImpact: 'Certified N95 filtration lowers inhaled fine particulate load by >85% during brief unavoidable exposure.',
-        updatedRoutineTitle: 'Shock Override: Fit-Checked N95 & Deferred Travel',
-      },
-      {
-        id: 'shock-3',
-        title: 'Zero-Smoke Cold/Induction Meal Pivot',
-        targetTimeBlock: 'Evening',
-        immediateAction:
-          'Pause high-heat frying or tadka for the next 12 hours; use pressure-cooked, steamed, or induction-prepared meals so zero indoor smoke compounds the external smog spike.',
-        healthAndEmissionImpact: 'Eliminates 150–300 µg/m³ indoor cooking spikes when windows cannot be opened safely.',
-        updatedRoutineTitle: 'Shock Override: Zero-Smoke Kitchen Protocol',
-      },
-    ],
-  };
-}
-
-export function buildFallbackCommunityBriefing(
-  liveData: LiveAirQualityData,
-  cpcb: CpcbAqiResult,
-  profile: HouseholdProfile,
-  ventilation: VentilationAnalysis,
-  swaps: HabitSwapTotals,
-): CommunityBriefingResponse {
-  const bestWin = ventilation.bestWindow
-    ? `${ventilation.bestWindow.startHourLabel} – ${ventilation.bestWindow.endHourLabel}`
-    : '1 PM – 3 PM';
-
-  return {
-    source: 'deterministic',
-    sourceMode: 'fallback',
-    executiveSnapshot: `${liveData.location.name} currently records Indian CPCB National AQI ${cpcb.aqi} (${cpcb.category.name}, dominant ${cpcb.dominantPollutant?.symbol ?? 'PM2.5'} at ${liveData.current.pm2_5?.toFixed(1) ?? '—'} µg/m³ as of ${liveData.readingIsoTime}). Best 3-hour airing window is ${bestWin}. Active low-emission swaps save ${swaps.weeklyCo2KgAvoided} kg CO₂/week and ₹${swaps.monthlyRupeesSaved.toLocaleString('en-IN')}/month.`,
-    whatsappAdvisory: `Family Air Update (${liveData.location.name}): Live CPCB AQI is ${cpcb.aqi} (${cpcb.category.name}, PM2.5 ${liveData.current.pm2_5?.toFixed(1) ?? '—'} µg/m³). Please keep windows closed this morning, air out briefly between ${bestWin}, wet-mop instead of dry sweeping, and wear N95 masks if stepping out near main roads. Source: Open-Meteo (${liveData.readingIsoTime}).`,
-    rwaNotice: `RWA / Society Clean-Air Notice — ${liveData.location.name} (CPCB AQI ${cpcb.aqi}, ${cpcb.category.name}): Residents are requested to halt open leaf/waste burning, pause dry driveway sweeping in favor of water-sprinkled cleaning, switch off idling vehicles at society gates, and limit outdoor kids' sports during peak smog hours.`,
-    carpoolPitch: `Hi team/parents — with ${liveData.location.name} at CPCB AQI ${cpcb.aqi} (${cpcb.category.name}), I’m organizing a 3-seat AC carpool / Metro buddy group along our ${profile.commuteDistanceKm} km route. Sharing rides cuts ~${swaps.weeklyCo2KgAvoided} kg CO₂/week and reduces kerbside exhaust exposure—reply if you'd like to split days this week!`,
+    budgetTip:
+      'A ₹200 foam weatherstrip tape around leaky window frames often cuts outdoor dust infiltration by 15–25%.',
   };
 }

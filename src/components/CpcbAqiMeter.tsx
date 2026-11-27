@@ -1,9 +1,5 @@
 import type { CpcbAqiResult } from '../types';
-import {
-  CPCB_SCALE_TICKS,
-  getAqiScalePercent,
-  getCpcbScaleSegments,
-} from '../utils/cpcbAqi';
+import { CPCB_SCALE_TICKS, getAqiScalePercent, getCpcbScaleSegments } from '../utils/cpcbAqi';
 
 interface CpcbAqiMeterProps {
   cpcb: CpcbAqiResult;

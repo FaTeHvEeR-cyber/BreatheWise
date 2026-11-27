@@ -30,13 +30,18 @@ export function IndoorSetupCard({
         </span>
       </div>
       <p className="mt-1 text-xs text-slate-600">
-        Options filled in your Household Profile are auto-filled below. Toggle any control to adapt the deterministic PM2.5 meter and Gemini room protocol immediately.
+        Options filled in your Household Profile are auto-filled below. Toggle any control to adapt
+        the deterministic PM2.5 meter and Gemini room protocol immediately.
       </p>
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="border border-slate-200 p-4">
           <p className="text-xs font-medium text-slate-700">Filtration Mode</p>
-          <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="Air filtration mode">
+          <div
+            className="mt-2 grid grid-cols-2 gap-2"
+            role="group"
+            aria-label="Air filtration mode"
+          >
             <button
               type="button"
               aria-pressed={profile.hasPurifier}
@@ -66,7 +71,11 @@ export function IndoorSetupCard({
 
         <div className="border border-slate-200 p-4">
           <p className="text-xs font-medium text-slate-700">Primary Cooking Fuel</p>
-          <div className="mt-2 grid grid-cols-3 gap-1.5" role="group" aria-label="Cooking fuel type">
+          <div
+            className="mt-2 grid grid-cols-3 gap-1.5"
+            role="group"
+            aria-label="Cooking fuel type"
+          >
             {FUEL_OPTIONS.map((fuel) => {
               const selected = profile.cookingFuel === fuel.id;
               return (
@@ -89,7 +98,9 @@ export function IndoorSetupCard({
         </div>
 
         <label className="flex cursor-pointer items-center justify-between border border-slate-200 p-4">
-          <span className="text-xs font-medium text-slate-800">Active Kitchen Chimney / Exhaust</span>
+          <span className="text-xs font-medium text-slate-800">
+            Active Kitchen Chimney / Exhaust
+          </span>
           <input
             type="checkbox"
             checked={profile.hasKitchenExhaust}
@@ -125,7 +136,8 @@ export function IndoorSetupCard({
             />
           </div>
           <p className="mt-0.5 text-[11px] text-slate-600">
-            Capped at {totalRooms} total {totalRooms === 1 ? 'room' : 'rooms'} specified in House Details.
+            Capped at {totalRooms} total {totalRooms === 1 ? 'room' : 'rooms'} specified in House
+            Details.
           </p>
         </div>
         <div className="flex items-center gap-2 font-mono text-[11px] text-slate-600 tabular-nums">
@@ -139,7 +151,9 @@ export function IndoorSetupCard({
             disabled={totalRooms <= 1}
             value={activeRooms}
             onChange={(e) =>
-              onUpdateProfile({ activeRoomCount: clampActiveRooms(Number(e.target.value), totalRooms) })
+              onUpdateProfile({
+                activeRoomCount: clampActiveRooms(Number(e.target.value), totalRooms),
+              })
             }
             className="w-36 accent-teal-800 disabled:opacity-50"
           />

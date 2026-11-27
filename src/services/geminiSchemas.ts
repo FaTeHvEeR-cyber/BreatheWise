@@ -8,7 +8,8 @@ export const CLARIFYING_QUESTIONS_SCHEMA: Schema = {
   properties: {
     airContextNote: {
       type: Type.STRING,
-      description: '1 concise sentence (<=22 words) citing exact live CPCB AQI and dominant pollutant.',
+      description:
+        '1 concise sentence (<=22 words) citing exact live CPCB AQI and dominant pollutant.',
     },
     questions: {
       type: Type.ARRAY,
@@ -102,7 +103,8 @@ export const INDOOR_PROTOCOL_SCHEMA: Schema = {
     },
     plantRealityCheck: {
       type: Type.STRING,
-      description: 'Realistic note explaining indoor plants supplement rather than replace filtration during severe smog.',
+      description:
+        'Realistic note explaining indoor plants supplement rather than replace filtration during severe smog.',
     },
     budgetTip: { type: Type.STRING },
   },
@@ -147,7 +149,8 @@ export const COMMUNITY_BRIEFING_SCHEMA: Schema = {
     executiveSnapshot: { type: Type.STRING },
     whatsappAdvisory: {
       type: Type.STRING,
-      description: 'Ready-to-paste concise family WhatsApp advisory citing the exact live CPCB AQI and cleanest airing window.',
+      description:
+        'Ready-to-paste concise family WhatsApp advisory citing the exact live CPCB AQI and cleanest airing window.',
     },
     rwaNotice: {
       type: Type.STRING,

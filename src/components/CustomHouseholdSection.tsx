@@ -1,13 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import type { CommuteMode, CookingFuel, HouseholdProfile } from '../types';
-import {
-  COMMUTE_OPTIONS,
-  FUEL_OPTIONS,
-  MAX_COMMUTE_KM,
-  MAX_ROOMS,
-} from '../data/breatheWisePresets';
+import type { HouseholdProfile } from '../types';
+import { MAX_COMMUTE_KM, MAX_ROOMS } from '../data/breatheWisePresets';
 import { clampActiveRooms, finalizeIntegerInput } from '../utils/numericInput';
-import { IntegerInputField } from './IntegerInputField';
+import { HouseholdProfileFields } from './HouseholdProfileFields';
 
 interface CustomHouseholdSectionProps {
   profile: HouseholdProfile;
@@ -17,8 +12,13 @@ interface CustomHouseholdSectionProps {
   onClearHousehold: () => void;
 }
 
+/** Custom household profile builder synced with the Indoor Lab and Routine workspaces. */
 export function CustomHouseholdSection({
-  profile, hasHouseholdProfile, onSyncSetup, onSaveCustomProfile, onClearHousehold,
+  profile,
+  hasHouseholdProfile,
+  onSyncSetup,
+  onSaveCustomProfile,
+  onClearHousehold,
 }: CustomHouseholdSectionProps) {
   const [draft, setDraft] = useState<HouseholdProfile>(profile);
   const [commuteInput, setCommuteInput] = useState<string>(String(profile.commuteDistanceKm));
@@ -75,12 +75,18 @@ export function CustomHouseholdSection({
   };
 
   return (
-    <section aria-label="Specify your own household profile" className="border border-slate-200 bg-white p-6">
+    <section
+      aria-label="Specify your own household profile"
+      className="border border-slate-200 bg-white p-6"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
-          <h2 className="text-base font-semibold text-slate-900">Your Individual Household Profile</h2>
+          <h2 className="text-base font-semibold text-slate-900">
+            Your Individual Household Profile
+          </h2>
           <p className="text-xs text-slate-600">
-            Specify your own home setup, commute, and family sensitivities—or customize any verified scenario above. Shared indoor options auto-fill in the Indoor Lab.
+            Specify your own home setup, commute, and family sensitivities—or customize any verified
+            scenario above. Shared indoor options auto-fill in the Indoor Lab.
           </p>
         </div>
         {hasHouseholdProfile && (
@@ -95,107 +101,15 @@ export function CustomHouseholdSection({
       </div>
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="custom-household-name" className="block text-xs font-medium text-slate-700">
-              Household Label
-            </label>
-            <input
-              id="custom-household-name"
-              type="text"
-              value={draft.profileName}
-              onChange={(e) => setDraft((d) => ({ ...d, profileName: e.target.value }))}
-              placeholder="e.g., My 2BHK Family in Indirapuram"
-              className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-teal-700 focus:bg-white focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="custom-vulnerable" className="block text-xs font-medium text-slate-700">
-              Family Members &amp; Health Sensitivities
-            </label>
-            <input
-              id="custom-vulnerable"
-              type="text"
-              value={draft.vulnerableMembers}
-              onChange={(e) => setDraft((d) => ({ ...d, vulnerableMembers: e.target.value }))}
-              placeholder="e.g., 2 adults, school-going child, elderly parent with asthma"
-              className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-teal-700 focus:bg-white focus:outline-none"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label htmlFor="custom-summary" className="block text-xs font-medium text-slate-700">
-              Household Routine Summary / Context
-            </label>
-            <input
-              id="custom-summary"
-              type="text"
-              value={draft.personaSummary}
-              onChange={(e) => setDraft((d) => ({ ...d, personaSummary: e.target.value }))}
-              placeholder="e.g., 3rd-floor apartment near main road, morning school bus drop at 7:45 AM, evening walk habit"
-              className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-teal-700 focus:bg-white focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <label htmlFor="custom-commute-mode" className="block text-xs font-medium text-slate-700">
-              Primary Commute
-            </label>
-            <select
-              id="custom-commute-mode"
-              value={draft.commuteMode}
-              onChange={(e) => updateAndSync({ commuteMode: e.target.value as CommuteMode })}
-              className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900 focus:border-teal-700 focus:outline-none"
-            >
-              {COMMUTE_OPTIONS.map((opt) => (
-                <option key={opt.id} value={opt.id}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <IntegerInputField
-            id="custom-commute-km"
-            label="Daily Commute (km)"
-            value={commuteInput}
-            min={0}
-            max={MAX_COMMUTE_KM}
-            fallback={0}
-            onChangeText={setCommuteInput}
-            onCommitNumber={(km) => updateAndSync({ commuteDistanceKm: km })}
-          />
-
-          <div>
-            <label htmlFor="custom-fuel" className="block text-xs font-medium text-slate-700">
-              Cooking Fuel
-            </label>
-            <select
-              id="custom-fuel"
-              value={draft.cookingFuel}
-              onChange={(e) => updateAndSync({ cookingFuel: e.target.value as CookingFuel })}
-              className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900 focus:border-teal-700 focus:outline-none"
-            >
-              {FUEL_OPTIONS.map((opt) => (
-                <option key={opt.id} value={opt.id}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <IntegerInputField
-            id="custom-rooms"
-            label="Active Rooms"
-            value={roomsInput}
-            min={1}
-            max={MAX_ROOMS}
-            fallback={1}
-            infoTooltip="Active Rooms are the rooms in your house that are regularly used or accessed by household members (such as bedrooms, living areas, and study rooms)."
-            infoTooltipAlign="right"
-            onChangeText={setRoomsInput}
-            onCommitNumber={(count) => updateAndSync({ roomCount: count })}
-          />
-        </div>
+        <HouseholdProfileFields
+          draft={draft}
+          commuteInput={commuteInput}
+          roomsInput={roomsInput}
+          onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+          onSyncSetup={updateAndSync}
+          onChangeCommuteText={setCommuteInput}
+          onChangeRoomsText={setRoomsInput}
+        />
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-4">
           <div className="flex flex-wrap items-center gap-5 text-xs text-slate-800">

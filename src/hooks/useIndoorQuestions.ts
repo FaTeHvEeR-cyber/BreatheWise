@@ -20,6 +20,7 @@ interface UseIndoorQuestionsParams {
   hasHouseholdProfile: boolean;
 }
 
+/** Manages tailored indoor air-quality setup questions and "+2 more" expansion. */
 export function useIndoorQuestions({
   liveData,
   cpcb,
@@ -28,7 +29,7 @@ export function useIndoorQuestions({
 }: UseIndoorQuestionsParams) {
   const baseQuestions = useMemo(
     () => buildInitialIndoorQuestions(profile, hasHouseholdProfile),
-    [profile.hasPurifier, profile.hasCrossVentilation, hasHouseholdProfile],
+    [profile, hasHouseholdProfile],
   );
 
   const [extraQuestions, setExtraQuestions] = useState<ClarifyingQuestion[]>([]);
@@ -65,7 +66,9 @@ export function useIndoorQuestions({
         existingQuestions: existingList,
       };
       const res = await callClarifyingQuestions(payload);
-      const next = mergeUniqueQuestions(indoorQuestions, res.questions, 2).slice(baseQuestions.length);
+      const next = mergeUniqueQuestions(indoorQuestions, res.questions, 2).slice(
+        baseQuestions.length,
+      );
       setExtraQuestions(next);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gemini unavailable.';

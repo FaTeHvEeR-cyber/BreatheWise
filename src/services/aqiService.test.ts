@@ -16,8 +16,24 @@ describe('aqiService Open-Meteo integration', () => {
         new Response(
           JSON.stringify({
             results: [
-              { id: 1, name: 'Delhi', country: 'Canada', country_code: 'CA', latitude: 42.85, longitude: -80.5 },
-              { id: 2, name: 'Delhi', admin1: 'Delhi', country: 'India', country_code: 'IN', latitude: 28.6139, longitude: 77.209, timezone: 'Asia/Kolkata' },
+              {
+                id: 1,
+                name: 'Delhi',
+                country: 'Canada',
+                country_code: 'CA',
+                latitude: 42.85,
+                longitude: -80.5,
+              },
+              {
+                id: 2,
+                name: 'Delhi',
+                admin1: 'Delhi',
+                country: 'India',
+                country_code: 'IN',
+                latitude: 28.6139,
+                longitude: 77.209,
+                timezone: 'Asia/Kolkata',
+              },
             ],
           }),
           { status: 200 },
@@ -36,7 +52,15 @@ describe('aqiService Open-Meteo integration', () => {
       vi.fn().mockResolvedValueOnce(
         new Response(
           JSON.stringify({
-            current: { time: '2026-11-27T08:00', pm2_5: 112.4, pm10: 210, nitrogen_dioxide: 42, ozone: 30, sulphur_dioxide: 12, us_aqi: 185 },
+            current: {
+              time: '2026-11-27T08:00',
+              pm2_5: 112.4,
+              pm10: 210,
+              nitrogen_dioxide: 42,
+              ozone: 30,
+              sulphur_dioxide: 12,
+              us_aqi: 185,
+            },
             hourly: {
               time: ['2026-11-27T08:00', '2026-11-27T09:00'],
               pm2_5: [112.4, null],

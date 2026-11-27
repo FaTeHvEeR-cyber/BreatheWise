@@ -5,10 +5,8 @@ export interface SseEvent {
   data: string;
 }
 
-export function parseSseChunk(
-  carry: string,
-  chunk: string,
-): { events: SseEvent[]; carry: string } {
+/** Splits an incoming SSE text chunk into parsed events and an incomplete carry buffer. */
+export function parseSseChunk(carry: string, chunk: string): { events: SseEvent[]; carry: string } {
   const normalized = (carry + chunk).replace(/\r\n/g, '\n');
   const blocks = normalized.split('\n\n');
   const nextCarry = blocks.pop() ?? '';
@@ -113,7 +111,9 @@ function normalizeQuestion(raw: unknown, idx: number): ClarifyingQuestion | null
   const id = typeof rec.id === 'string' && rec.id.trim() ? rec.id.trim() : `q${idx + 1}`;
   const reason = typeof rec.reason === 'string' ? rec.reason.trim() : '';
   const quickOptions = Array.isArray(rec.quickOptions)
-    ? rec.quickOptions.filter((opt): opt is string => typeof opt === 'string' && opt.trim().length > 0)
+    ? rec.quickOptions.filter(
+        (opt): opt is string => typeof opt === 'string' && opt.trim().length > 0,
+      )
     : [];
   if (quickOptions.length === 0) return null;
   return { id, question, reason, quickOptions };
@@ -169,6 +169,7 @@ function extractCompletedQuestions(src: string): ClarifyingQuestion[] {
   return questions;
 }
 
+/** Incrementally extracts completed fields from a partially streamed JSON buffer. */
 export function parsePartialClarifyingQuestions(
   rawBuffer: string,
 ): ClarifyingQuestionsResponse | null {
@@ -181,7 +182,8 @@ export function parsePartialClarifyingQuestions(
       questions?: unknown;
     };
     if (full && typeof full === 'object') {
-      const airContextNote = typeof full.airContextNote === 'string' ? full.airContextNote.trim() : '';
+      const airContextNote =
+        typeof full.airContextNote === 'string' ? full.airContextNote.trim() : '';
       const rawList = Array.isArray(full.questions) ? full.questions : [];
       const questions = rawList
         .map((item, idx) => normalizeQuestion(item, idx))

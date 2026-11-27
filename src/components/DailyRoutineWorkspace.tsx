@@ -6,7 +6,7 @@ import type {
 } from '../types';
 import type { AsyncSlot } from '../hooks/useAirQualityApp';
 import type { VentilationAnalysis } from '../utils/ventilationWindows';
-import { Pm25ForecastChart } from '../utils/dataVisualization';
+import { Pm25ForecastChart } from './Pm25ForecastChart';
 
 interface DailyRoutineWorkspaceProps {
   liveData: LiveAirQualityData;
@@ -37,7 +37,10 @@ export default function DailyRoutineWorkspace({
 }: DailyRoutineWorkspaceProps) {
   return (
     <div id="panel-routine" role="tabpanel" aria-labelledby="tab-routine" className="space-y-6">
-      <section aria-label="24-hour cleanest ventilation window and protection score" className="border border-slate-200 bg-white">
+      <section
+        aria-label="24-hour cleanest ventilation window and protection score"
+        className="border border-slate-200 bg-white"
+      >
         <div className="grid grid-cols-1 divide-y divide-slate-200 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-y-0">
           <div className="p-5">
             <p className="text-xs font-medium text-slate-600">Best Ventilation Window</p>
@@ -47,7 +50,8 @@ export default function DailyRoutineWorkspace({
                 : 'N/A'}
             </p>
             <p className="mt-1 font-mono text-xs text-slate-600 tabular-nums">
-              Avg {ventilation.bestWindow?.avgPm25.toFixed(1) ?? '—'} µg/m³ · {ventilation.bestWindow?.verdict ?? '—'}
+              Avg {ventilation.bestWindow?.avgPm25.toFixed(1) ?? '—'} µg/m³ ·{' '}
+              {ventilation.bestWindow?.verdict ?? '—'}
             </p>
           </div>
           <div className="p-5">
@@ -97,11 +101,17 @@ export default function DailyRoutineWorkspace({
         </div>
       </section>
 
-      <section aria-label="24-hour outdoor PM2.5 trend chart" className="border border-slate-200 bg-white p-6">
+      <section
+        aria-label="24-hour outdoor PM2.5 trend chart"
+        className="border border-slate-200 bg-white p-6"
+      >
         <Pm25ForecastChart hourly24h={liveData.hourly24h} bestWindow={ventilation.bestWindow} />
       </section>
 
-      <section aria-label="Personalized low-emission daily routine" className="border border-slate-200 bg-white p-6">
+      <section
+        aria-label="Personalized low-emission daily routine"
+        className="border border-slate-200 bg-white p-6"
+      >
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
@@ -128,29 +138,41 @@ export default function DailyRoutineWorkspace({
         </div>
 
         {appliedShockNote && (
-          <div role="status" className="mt-4 border border-teal-200 bg-teal-50 px-4 py-2.5 text-xs font-medium text-teal-950">
+          <div
+            role="status"
+            className="mt-4 border border-teal-200 bg-teal-50 px-4 py-2.5 text-xs font-medium text-teal-950"
+          >
             {appliedShockNote}
           </div>
         )}
 
         {routineSlot.error && (
-          <p role="status" className="mt-4 border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-900">
-            Gemini live note ({routineSlot.error}) — showing deterministic local routine grounded in live Open-Meteo data.
+          <p
+            role="status"
+            className="mt-4 border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-900"
+          >
+            Gemini live note ({routineSlot.error}) — showing deterministic local routine grounded in
+            live Open-Meteo data.
           </p>
         )}
 
         {!routineSlot.data && !routineSlot.loading && (
           <p className="mt-4 text-sm text-slate-600">
-            Click <strong className="font-medium text-slate-900">Generate Daily Routine</strong> (or answer clarifying questions in Intake) to build your 4-block low-emission schedule.
+            Click <strong className="font-medium text-slate-900">Generate Daily Routine</strong> (or
+            answer clarifying questions in Intake) to build your 4-block low-emission schedule.
           </p>
         )}
 
         {routineSlot.data && (
           <div className="mt-5 space-y-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-sm font-medium text-slate-900">{routineSlot.data.routineHeadline}</p>
+              <p className="text-sm font-medium text-slate-900">
+                {routineSlot.data.routineHeadline}
+              </p>
               {routineSlot.data.source && (
-                <span className="font-mono text-[11px] text-slate-600">Source: {routineSlot.data.source}</span>
+                <span className="font-mono text-[11px] text-slate-600">
+                  Source: {routineSlot.data.source}
+                </span>
               )}
             </div>
             <div className="divide-y divide-slate-200 border border-slate-200">
@@ -179,7 +201,9 @@ export default function DailyRoutineWorkspace({
                           <span className="font-mono text-xs text-slate-500 tabular-nums">
                             {block.timeRange}
                           </span>
-                          <span className={`text-base font-semibold ${checked ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
+                          <span
+                            className={`text-base font-semibold ${checked ? 'text-slate-500 line-through' : 'text-slate-900'}`}
+                          >
                             {block.title}
                           </span>
                         </div>

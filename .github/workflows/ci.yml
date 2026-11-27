@@ -22,8 +22,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: TypeScript typecheck
+      - name: Lint & TypeScript typecheck
         run: npm run lint
+
+      - name: Prettier formatting check
+        run: npm run format:check
 
       - name: Run Vitest with V8 coverage thresholds
         run: npm run test:coverage

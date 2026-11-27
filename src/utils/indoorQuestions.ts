@@ -141,6 +141,7 @@ export function upsertAppliedShockPatch(
   ];
 }
 
+/** Checks whether a smog shock strategy has already been applied to its target time block. */
 export function isShockStrategyApplied(
   appliedPatches: readonly AppliedShockPatch[],
   scenario: string,

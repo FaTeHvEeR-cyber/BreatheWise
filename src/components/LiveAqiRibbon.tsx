@@ -38,7 +38,9 @@ export function LiveAqiRibbon({
           {location.name}
           {location.admin1 ? `, ${location.admin1}` : ''}
         </span>
-        <span aria-hidden="true" className="text-slate-400">·</span>
+        <span aria-hidden="true" className="text-slate-400">
+          ·
+        </span>
         {cpcb ? (
           <span className={`font-mono font-semibold tabular-nums ${cpcb.category.textColorClass}`}>
             CPCB AQI {cpcb.aqi} ({cpcb.category.name})
@@ -46,9 +48,13 @@ export function LiveAqiRibbon({
         ) : (
           <span className="font-mono text-slate-500">Computing CPCB AQI…</span>
         )}
-        <span aria-hidden="true" className="text-slate-400">·</span>
+        <span aria-hidden="true" className="text-slate-400">
+          ·
+        </span>
         <span>Source: {liveData?.sourceName ?? 'Open-Meteo Air Quality API'}</span>
-        <span aria-hidden="true" className="text-slate-400">·</span>
+        <span aria-hidden="true" className="text-slate-400">
+          ·
+        </span>
         <span className="font-mono tabular-nums">
           Reading:{' '}
           {reading ? (
@@ -62,8 +68,13 @@ export function LiveAqiRibbon({
         </span>
         {refreshed && (
           <>
-            <span aria-hidden="true" className="text-slate-400">·</span>
-            <span className="font-mono tabular-nums" title="Live telemetry refreshes automatically every 5 minutes">
+            <span aria-hidden="true" className="text-slate-400">
+              ·
+            </span>
+            <span
+              className="font-mono tabular-nums"
+              title="Live telemetry refreshes automatically every 5 minutes"
+            >
               Refreshed:{' '}
               <span className="inline-flex items-baseline gap-2 text-slate-900">
                 <span>{refreshed.dateLabel}</span>
@@ -74,10 +85,10 @@ export function LiveAqiRibbon({
         )}
         {hasHouseholdProfile && profile.profileName.trim() && (
           <>
-            <span aria-hidden="true" className="text-slate-400">·</span>
-            <span className="font-medium text-slate-800">
-              Household: {profile.profileName}
+            <span aria-hidden="true" className="text-slate-400">
+              ·
             </span>
+            <span className="font-medium text-slate-800">Household: {profile.profileName}</span>
           </>
         )}
       </div>
@@ -93,7 +104,10 @@ export function LiveAqiRibbon({
           aria-label="Refresh live Open-Meteo air quality data now"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-800 hover:text-slate-950 disabled:opacity-50 whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
         >
-          <RefreshCw aria-hidden="true" className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            aria-hidden="true"
+            className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`}
+          />
           {loading ? 'Refreshing…' : 'Refresh Live (5m auto)'}
         </button>
       </div>

@@ -2,11 +2,8 @@ import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import {
-  buildPm25ChartData,
-  computeAirQualityTrajectory,
-  Pm25ForecastChart,
-} from './dataVisualization';
+import { buildPm25ChartData, computeAirQualityTrajectory } from './dataVisualization';
+import { Pm25ForecastChart } from '../components/Pm25ForecastChart';
 import type { HourlyForecastPoint } from '../types';
 
 function buildSeries(values: number[]): HourlyForecastPoint[] {

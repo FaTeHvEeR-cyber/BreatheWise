@@ -1,4 +1,5 @@
 import type { HourlyForecastPoint } from '../types';
+import { PM25_BRIEF_PURGE_LIMIT, PM25_SAFE_VENTILATION_LIMIT } from '../config/constants';
 
 export type WindowVerdict = 'Open Windows' | 'Brief Purge' | 'Keep Sealed';
 
@@ -33,9 +34,10 @@ export interface VentilationAnalysis {
   recommendedPurifierHours: number;
 }
 
+/** Classifies an hourly PM2.5 concentration into a window ventilation verdict. */
 export function classifyVentilationHour(pm25: number): WindowVerdict {
-  if (pm25 <= 35) return 'Open Windows';
-  if (pm25 <= 65) return 'Brief Purge';
+  if (pm25 <= PM25_SAFE_VENTILATION_LIMIT) return 'Open Windows';
+  if (pm25 <= PM25_BRIEF_PURGE_LIMIT) return 'Brief Purge';
   return 'Keep Sealed';
 }
 
@@ -62,6 +64,7 @@ function buildSlidingWindow(
   };
 }
 
+/** Analyzes 24-hour PM2.5 forecasts to find cleanest and peak-danger 3-hour windows. */
 export function analyzeVentilationWindows(
   hourly24h: readonly HourlyForecastPoint[],
   currentPm25: number,
@@ -85,7 +88,7 @@ export function analyzeVentilationWindows(
       dailyMinPm25: currentPm25,
       dailyMaxPm25: currentPm25,
       dailyAvgPm25: currentPm25,
-      recommendedPurifierHours: currentPm25 > 35 ? 24 : 0,
+      recommendedPurifierHours: currentPm25 > PM25_SAFE_VENTILATION_LIMIT ? 24 : 0,
     };
   }
 
@@ -117,6 +120,7 @@ export function analyzeVentilationWindows(
     dailyMinPm25,
     dailyMaxPm25,
     dailyAvgPm25,
-    recommendedPurifierHours: hourlyStatuses.filter((h) => h.pm2_5 > 35).length,
+    recommendedPurifierHours: hourlyStatuses.filter((h) => h.pm2_5 > PM25_SAFE_VENTILATION_LIMIT)
+      .length,
   };
 }

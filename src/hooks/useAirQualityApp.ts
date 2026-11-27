@@ -6,10 +6,7 @@ import type {
   LiveAirQualityData,
   WorkspaceId,
 } from '../types';
-import {
-  EMPTY_HOUSEHOLD_PROFILE,
-  QUICK_INDIAN_CITIES,
-} from '../data/breatheWisePresets';
+import { EMPTY_HOUSEHOLD_PROFILE, QUICK_INDIAN_CITIES } from '../data/breatheWisePresets';
 import { fetchLiveCityAirQuality } from '../services/aqiService';
 import { computeCpcbAqi } from '../utils/cpcbAqi';
 import { analyzeVentilationWindows } from '../utils/ventilationWindows';
@@ -17,10 +14,7 @@ import {
   calculateHabitSwapImpact,
   calculateIndoorMitigationImpact,
 } from '../utils/emissionsCalculator';
-import {
-  DEFAULT_AUTO_REFRESH_MS,
-  shouldAutoRefresh,
-} from '../utils/timeFormatting';
+import { DEFAULT_AUTO_REFRESH_MS, shouldAutoRefresh } from '../utils/timeFormatting';
 import { applyRoomProfilePatch } from '../utils/numericInput';
 import { useBreatheWiseAi } from './useBreatheWiseAi';
 import { useIndoorQuestions } from './useIndoorQuestions';
@@ -29,13 +23,17 @@ export type { AsyncSlot } from './useBreatheWiseAi';
 
 export const AUTO_REFRESH_INTERVAL_MS = DEFAULT_AUTO_REFRESH_MS;
 
+/** Top-level application state hook coordinating Open-Meteo telemetry, presets, and AI slots. */
 export function useAirQualityApp() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceId>('intake');
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [hasHouseholdProfile, setHasHouseholdProfile] = useState<boolean>(false);
   const [location, setLocationState] = useState<CityLocation>(QUICK_INDIAN_CITIES[0]);
   const [profile, setProfile] = useState<HouseholdProfile>(EMPTY_HOUSEHOLD_PROFILE);
-  const [selectedSwapIds, setSelectedSwapIds] = useState<string[]>(['metro-carpool', 'midday-venting']);
+  const [selectedSwapIds, setSelectedSwapIds] = useState<string[]>([
+    'metro-carpool',
+    'midday-venting',
+  ]);
 
   const [liveData, setLiveData] = useState<LiveAirQualityData | null>(null);
   const [aqiLoading, setAqiLoading] = useState<boolean>(true);
@@ -107,18 +105,20 @@ export function useAirQualityApp() {
     };
   }, [location, refreshAqi]);
 
+  const currentPm25 = liveData?.current.pm2_5 ?? 0;
   const cpcb = useMemo(() => (liveData ? computeCpcbAqi(liveData.current) : null), [liveData]);
   const ventilation = useMemo(
-    () => (liveData ? analyzeVentilationWindows(liveData.hourly24h, liveData.current.pm2_5 ?? 0) : null),
+    () =>
+      liveData ? analyzeVentilationWindows(liveData.hourly24h, liveData.current.pm2_5 ?? 0) : null,
     [liveData],
   );
   const indoorMeter = useMemo(
-    () => calculateIndoorMitigationImpact(liveData?.current.pm2_5 ?? 0, profile),
-    [liveData?.current.pm2_5, profile],
+    () => calculateIndoorMitigationImpact(currentPm25, profile),
+    [currentPm25, profile],
   );
   const swapTotals = useMemo(
-    () => calculateHabitSwapImpact(selectedSwapIds, profile.commuteDistanceKm, liveData?.current.pm2_5 ?? 0),
-    [selectedSwapIds, profile.commuteDistanceKm, liveData?.current.pm2_5],
+    () => calculateHabitSwapImpact(selectedSwapIds, profile.commuteDistanceKm, currentPm25),
+    [selectedSwapIds, profile.commuteDistanceKm, currentPm25],
   );
 
   const indoorQ = useIndoorQuestions({
@@ -139,6 +139,8 @@ export function useAirQualityApp() {
     indoorAnswers: indoorQ.indoorAnswers,
     onNavigateWorkspace: setActiveWorkspace,
   });
+  const { resetAiSlots } = ai;
+  const { resetIndoorQuestions } = indoorQ;
 
   const protectionScorePct = useMemo(() => {
     const blocks = ai.routineSlot.data?.blocks ?? [];
@@ -150,37 +152,46 @@ export function useAirQualityApp() {
     return Math.round((doneWeight / totalWeight) * 100);
   }, [ai.routineSlot.data, ai.completedBlockIds]);
 
-  const selectCity = useCallback((city: CityLocation) => {
-    setLocationState(city);
-    ai.resetAiSlots();
-    indoorQ.resetIndoorQuestions();
-  }, [ai.resetAiSlots, indoorQ.resetIndoorQuestions]);
+  const selectCity = useCallback(
+    (city: CityLocation) => {
+      setLocationState(city);
+      resetAiSlots();
+      resetIndoorQuestions();
+    },
+    [resetAiSlots, resetIndoorQuestions],
+  );
 
-  const selectSampleProfile = useCallback((preset: EvaluatorSampleProfile) => {
-    setActivePresetId(preset.id);
-    setHasHouseholdProfile(true);
-    setLocationState(preset.city);
-    setProfile(applyRoomProfilePatch(preset.profile, {}));
-    setSelectedSwapIds(preset.defaultSwapIds);
-    ai.resetAiSlots();
-    indoorQ.resetIndoorQuestions();
-  }, [ai.resetAiSlots, indoorQ.resetIndoorQuestions]);
+  const selectSampleProfile = useCallback(
+    (preset: EvaluatorSampleProfile) => {
+      setActivePresetId(preset.id);
+      setHasHouseholdProfile(true);
+      setLocationState(preset.city);
+      setProfile(applyRoomProfilePatch(preset.profile, {}));
+      setSelectedSwapIds(preset.defaultSwapIds);
+      resetAiSlots();
+      resetIndoorQuestions();
+    },
+    [resetAiSlots, resetIndoorQuestions],
+  );
 
-  const saveCustomProfile = useCallback((custom: HouseholdProfile) => {
-    setActivePresetId(null);
-    setHasHouseholdProfile(true);
-    setProfile((prev) => applyRoomProfilePatch(prev, custom));
-    ai.resetAiSlots();
-    indoorQ.resetIndoorQuestions();
-  }, [ai.resetAiSlots, indoorQ.resetIndoorQuestions]);
+  const saveCustomProfile = useCallback(
+    (custom: HouseholdProfile) => {
+      setActivePresetId(null);
+      setHasHouseholdProfile(true);
+      setProfile((prev) => applyRoomProfilePatch(prev, custom));
+      resetAiSlots();
+      resetIndoorQuestions();
+    },
+    [resetAiSlots, resetIndoorQuestions],
+  );
 
   const clearHouseholdProfile = useCallback(() => {
     setActivePresetId(null);
     setHasHouseholdProfile(false);
     setProfile(EMPTY_HOUSEHOLD_PROFILE);
-    ai.resetAiSlots();
-    indoorQ.resetIndoorQuestions();
-  }, [ai.resetAiSlots, indoorQ.resetIndoorQuestions]);
+    resetAiSlots();
+    resetIndoorQuestions();
+  }, [resetAiSlots, resetIndoorQuestions]);
 
   const updateProfile = useCallback((patch: Partial<HouseholdProfile>) => {
     setProfile((prev) => applyRoomProfilePatch(prev, patch));
@@ -193,10 +204,21 @@ export function useAirQualityApp() {
   }, []);
 
   return {
-    activeWorkspace, setActiveWorkspace,
-    activePresetId, hasHouseholdProfile, location, profile, selectedSwapIds,
-    liveData, cpcb, ventilation, indoorMeter, swapTotals,
-    aqiLoading, aqiError, refreshAqi,
+    activeWorkspace,
+    setActiveWorkspace,
+    activePresetId,
+    hasHouseholdProfile,
+    location,
+    profile,
+    selectedSwapIds,
+    liveData,
+    cpcb,
+    ventilation,
+    indoorMeter,
+    swapTotals,
+    aqiLoading,
+    aqiError,
+    refreshAqi,
     protectionScorePct,
     questionsSlot: ai.questionsSlot,
     loadingMoreQuestions: ai.loadingMoreQuestions,
@@ -225,7 +247,11 @@ export function useAirQualityApp() {
     applyShockStrategy: ai.applyShockStrategy,
     communitySlot: ai.communitySlot,
     runCommunityBriefing: ai.runCommunityBriefing,
-    selectCity, selectSampleProfile, saveCustomProfile, clearHouseholdProfile,
-    updateProfile, toggleHabitSwap,
+    selectCity,
+    selectSampleProfile,
+    saveCustomProfile,
+    clearHouseholdProfile,
+    updateProfile,
+    toggleHabitSwap,
   };
 }

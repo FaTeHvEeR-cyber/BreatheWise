@@ -1,13 +1,6 @@
 import type { WorkspaceId } from '../types';
+import { WORKSPACE_TABS } from '../config/constants';
 import { useRovingTabs } from '../hooks/useRovingTabs';
-
-export const WORKSPACE_TABS: ReadonlyArray<{ id: WorkspaceId; label: string }> = [
-  { id: 'intake', label: 'Intake' },
-  { id: 'routine', label: 'Routine' },
-  { id: 'indoor', label: 'Indoor Lab' },
-  { id: 'simulator', label: 'Simulator' },
-  { id: 'community', label: 'Community' },
-] as const;
 
 const TAB_IDS: readonly WorkspaceId[] = WORKSPACE_TABS.map((t) => t.id);
 

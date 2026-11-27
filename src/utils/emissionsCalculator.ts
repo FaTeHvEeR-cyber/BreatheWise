@@ -26,11 +26,17 @@ export interface HabitSwapTotals {
   rows: SwapImpactRow[];
 }
 
+/** Estimates indoor PM2.5 reduction from HEPA, sealing, and cooking fuel choices. */
 export function calculateIndoorMitigationImpact(
   outdoorPm25: number,
   profile: Pick<
     HouseholdProfile,
-    'hasPurifier' | 'cookingFuel' | 'hasKitchenExhaust' | 'hasCrossVentilation' | 'roomCount' | 'activeRoomCount'
+    | 'hasPurifier'
+    | 'cookingFuel'
+    | 'hasKitchenExhaust'
+    | 'hasCrossVentilation'
+    | 'roomCount'
+    | 'activeRoomCount'
   >,
 ): IndoorMitigationMeter {
   const safeOutdoor = Math.max(0, outdoorPm25);
@@ -59,11 +65,7 @@ export function calculateIndoorMitigationImpact(
   }
 
   const cookingAfterAdd =
-    profile.cookingFuel === 'induction'
-      ? 2
-      : profile.hasKitchenExhaust
-        ? 6
-        : 14;
+    profile.cookingFuel === 'induction' ? 2 : profile.hasKitchenExhaust ? 6 : 14;
 
   if (profile.cookingFuel === 'induction') {
     appliedMeasures.push('Induction cooking avoids indoor gas NO₂ & soot');
@@ -76,7 +78,9 @@ export function calculateIndoorMitigationImpact(
   );
 
   const reductionPercent =
-    beforePm25 > 0 ? Math.max(0, Math.min(90, Math.round(((beforePm25 - afterPm25) / beforePm25) * 100))) : 0;
+    beforePm25 > 0
+      ? Math.max(0, Math.min(90, Math.round(((beforePm25 - afterPm25) / beforePm25) * 100)))
+      : 0;
 
   return {
     outdoorPm25: Number(safeOutdoor.toFixed(1)),
@@ -87,6 +91,7 @@ export function calculateIndoorMitigationImpact(
   };
 }
 
+/** Calculates weekly CO2 avoided, PM2.5 exposure reduction, and monthly rupee savings. */
 export function calculateHabitSwapImpact(
   selectedSwapIds: readonly string[],
   commuteDistanceKm: number,

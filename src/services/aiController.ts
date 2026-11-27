@@ -1,8 +1,5 @@
-import {
-  AI_ACTION_CONTRACTS,
-  MAX_API_BODY_BYTES,
-  type AiActionName,
-} from '../validation/aqiContracts.js';
+import { DEFAULT_GEMINI_MODEL, MAX_API_BODY_BYTES } from '../config/constants.js';
+import { AI_ACTION_CONTRACTS, type AiActionName } from '../validation/aqiContracts.js';
 import {
   generateClarifyingQuestions,
   generateCommunityBriefing,
@@ -30,7 +27,10 @@ export interface ApiResponseLike {
   on?(event: string, listener: () => void): void;
 }
 
-const ACTION_HANDLERS: Record<AiActionName, (payload: Record<string, unknown>) => Promise<unknown>> = {
+const ACTION_HANDLERS: Record<
+  AiActionName,
+  (payload: Record<string, unknown>) => Promise<unknown>
+> = {
   clarifyingQuestions: generateClarifyingQuestions,
   dailyRoutine: generateDailyRoutine,
   indoorProtocol: generateIndoorProtocol,
@@ -69,19 +69,27 @@ async function readStreamBody(req: ApiRequestLike): Promise<{ raw: string; tooLa
       chunks.push(buf);
     });
     req.on?.('end', () => {
-      if (!settled) { settled = true; resolve({ raw: Buffer.concat(chunks).toString('utf8'), tooLarge: false }); }
+      if (!settled) {
+        settled = true;
+        resolve({ raw: Buffer.concat(chunks).toString('utf8'), tooLarge: false });
+      }
     });
     req.on?.('error', (err: unknown) => {
-      if (!settled) { settled = true; reject(err); }
+      if (!settled) {
+        settled = true;
+        reject(err);
+      }
     });
   });
 }
 
 type BodyParseResult =
-  | { ok: true; data: Record<string, unknown> }
-  | { ok: false; status: 400 | 413; error: string };
+  { ok: true; data: Record<string, unknown> } | { ok: false; status: 400 | 413; error: string };
 
-async function extractAndValidateBody(req: ApiRequestLike, action: AiActionName): Promise<BodyParseResult> {
+async function extractAndValidateBody(
+  req: ApiRequestLike,
+  action: AiActionName,
+): Promise<BodyParseResult> {
   const lenHeader = getHeaderValue(req.headers, 'content-length');
   const declaredBytes = lenHeader ? Number.parseInt(lenHeader, 10) : 0;
   if (Number.isFinite(declaredBytes) && declaredBytes > MAX_API_BODY_BYTES) {
@@ -93,14 +101,19 @@ async function extractAndValidateBody(req: ApiRequestLike, action: AiActionName)
     if (Buffer.byteLength(parsedBody, 'utf8') > MAX_API_BODY_BYTES) {
       return { ok: false, status: 413, error: 'Request payload exceeds 128 KB limit.' };
     }
-    try { parsedBody = JSON.parse(parsedBody) as unknown; } catch {
+    try {
+      parsedBody = JSON.parse(parsedBody) as unknown;
+    } catch {
       return { ok: false, status: 400, error: 'Invalid JSON request body.' };
     }
   } else if (parsedBody === undefined) {
     const streamed = await readStreamBody(req);
-    if (streamed.tooLarge) return { ok: false, status: 413, error: 'Request payload exceeds 128 KB limit.' };
+    if (streamed.tooLarge)
+      return { ok: false, status: 413, error: 'Request payload exceeds 128 KB limit.' };
     if (!streamed.raw.trim()) return { ok: false, status: 400, error: 'Request body is required.' };
-    try { parsedBody = JSON.parse(streamed.raw) as unknown; } catch {
+    try {
+      parsedBody = JSON.parse(streamed.raw) as unknown;
+    } catch {
       return { ok: false, status: 400, error: 'Invalid JSON request body.' };
     }
   } else if (Buffer.byteLength(JSON.stringify(parsedBody), 'utf8') > MAX_API_BODY_BYTES) {
@@ -124,9 +137,14 @@ function validatePostHeaders(req: ApiRequestLike, res: ApiResponseLike): boolean
     res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
     return false;
   }
-  const contentType = (getHeaderValue(req.headers, 'content-type') ?? '').split(';')[0].trim().toLowerCase();
+  const contentType = (getHeaderValue(req.headers, 'content-type') ?? '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
   if (contentType !== 'application/json') {
-    res.status(415).json({ error: 'Unsupported Media Type. Content-Type must be application/json.' });
+    res
+      .status(415)
+      .json({ error: 'Unsupported Media Type. Content-Type must be application/json.' });
     return false;
   }
   return true;
@@ -139,10 +157,15 @@ function logSafeAiError(action: string, err: unknown): void {
   if (key) {
     msg = msg.split(key).join('[REDACTED]');
   }
-  msg = msg.replace(/AIza[A-Za-z0-9_-]{8,}/g, '[REDACTED]').replace(/key=[^&\s]+/gi, 'key=[REDACTED]');
+  msg = msg
+    .replace(/AIza[A-Za-z0-9_-]{8,}/g, '[REDACTED]')
+    .replace(/key=[^&\s]+/gi, 'key=[REDACTED]');
   console.error('[BreatheWise AI]', action, errName, msg.slice(0, 160));
 }
 
+/**
+ * Handles GET /api/health checks with Gemini configuration status.
+ */
 export function handleHealthRequest(req: ApiRequestLike, res: ApiResponseLike): void {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'GET') {
@@ -155,10 +178,13 @@ export function handleHealthRequest(req: ApiRequestLike, res: ApiResponseLike): 
     app: 'BreatheWise',
     timestamp: new Date().toISOString(),
     geminiConfigured: Boolean((process.env.GEMINI_API_KEY ?? '').trim()),
-    model: (process.env.GEMINI_MODEL ?? '').trim() || 'gemini-3.8-flash',
+    model: (process.env.GEMINI_MODEL ?? '').trim() || DEFAULT_GEMINI_MODEL,
   });
 }
 
+/**
+ * Validates and executes POST /api/gemini/* action requests against Zod trust boundaries.
+ */
 export async function handleAiPostRequest(
   req: ApiRequestLike,
   res: ApiResponseLike,
@@ -187,6 +213,7 @@ function writeSseEvent(res: ApiResponseLike, event: string, data: unknown): void
   res.write?.(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
+/** Streams incremental clarifying questions over SSE with Zod input/output validation. */
 export async function handleQuestionsStreamRequest(
   req: ApiRequestLike,
   res: ApiResponseLike,

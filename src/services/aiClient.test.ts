@@ -16,7 +16,11 @@ import {
 } from '../utils/fallbackAdvisor';
 import { computeCpcbAqi } from '../utils/cpcbAqi';
 import { analyzeVentilationWindows } from '../utils/ventilationWindows';
-import { EMPTY_HOUSEHOLD_PROFILE, EVALUATOR_SAMPLE_PROFILES, QUICK_INDIAN_CITIES } from '../data/breatheWisePresets';
+import {
+  EMPTY_HOUSEHOLD_PROFILE,
+  EVALUATOR_SAMPLE_PROFILES,
+  QUICK_INDIAN_CITIES,
+} from '../data/breatheWisePresets';
 
 function makeStreamBody(frames: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -63,9 +67,11 @@ describe('aiClient & deterministic fallback provenance', () => {
   it('propagates clean API errors on HTTP 400/500 and network/timeout rejections', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValueOnce(
-        new Response(JSON.stringify({ error: 'Invalid request payload.' }), { status: 400 }),
-      ),
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ error: 'Invalid request payload.' }), { status: 400 }),
+        ),
     );
     await expect(callDailyRoutine({})).rejects.toThrow('Invalid request payload.');
 
@@ -88,31 +94,51 @@ describe('aiClient & deterministic fallback provenance', () => {
     ]);
 
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(sseBody, { status: 200 })));
-    const result = await streamClarifyingQuestionsClient({}, (p) => partials.push(p.airContextNote));
+    const result = await streamClarifyingQuestionsClient({}, (p) =>
+      partials.push(p.airContextNote),
+    );
     expect(partials.length).toBeGreaterThan(0);
     expect(result.source).toBe('gemini-3.8-flash');
 
     const errorBody = makeStreamBody(['event: error\ndata: {"error":"Stream unavailable"}\n\n']);
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(errorBody, { status: 200 })));
-    await expect(streamClarifyingQuestionsClient({}, () => { })).rejects.toThrow('Stream unavailable');
-
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(makeStreamBody([]), { status: 200 })));
-    await expect(streamClarifyingQuestionsClient({}, () => { })).rejects.toThrow('Gemini stream ended');
+    await expect(streamClarifyingQuestionsClient({}, () => {})).rejects.toThrow(
+      'Stream unavailable',
+    );
 
     vi.stubGlobal(
       'fetch',
-      vi.fn()
+      vi.fn().mockResolvedValueOnce(new Response(makeStreamBody([]), { status: 200 })),
+    );
+    await expect(streamClarifyingQuestionsClient({}, () => {})).rejects.toThrow(
+      'Gemini stream ended',
+    );
+
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
         .mockResolvedValueOnce({ ok: true, status: 200, body: null })
         .mockResolvedValueOnce(
-          new Response(JSON.stringify({ airContextNote: 'ok', questions: [], source: 'gemini-3.8-flash' }), { status: 200 }),
+          new Response(
+            JSON.stringify({ airContextNote: 'ok', questions: [], source: 'gemini-3.8-flash' }),
+            { status: 200 },
+          ),
         ),
     );
-    const noBodyRes = await streamClarifyingQuestionsClient({}, () => { });
+    const noBodyRes = await streamClarifyingQuestionsClient({}, () => {});
     expect(noBodyRes.source).toBe('gemini-3.8-flash');
   });
 
   it('marks all deterministic fallback responses with source: deterministic', () => {
-    const current = { pm2_5: 120, pm10: 210, nitrogen_dioxide: 45, ozone: 30, sulphur_dioxide: 12, us_aqi: 185 };
+    const current = {
+      pm2_5: 120,
+      pm10: 210,
+      nitrogen_dioxide: 45,
+      ozone: 30,
+      sulphur_dioxide: 12,
+      us_aqi: 185,
+    };
     const cpcb = computeCpcbAqi(current);
     const liveData = {
       location: QUICK_INDIAN_CITIES[0],
@@ -122,21 +148,50 @@ describe('aiClient & deterministic fallback provenance', () => {
       fetchedAtIso: '2026-11-27T08:05:00.000Z',
       current,
       hourly24h: [
-        { isoTime: '2026-11-27T12:00', hourLabel: '12 PM', pm2_5: 30, pm10: 60, us_aqi: 80, cpcbPm25SubIndex: 50 },
-        { isoTime: '2026-11-27T13:00', hourLabel: '1 PM', pm2_5: 28, pm10: 55, us_aqi: 75, cpcbPm25SubIndex: 47 },
+        {
+          isoTime: '2026-11-27T12:00',
+          hourLabel: '12 PM',
+          pm2_5: 30,
+          pm10: 60,
+          us_aqi: 80,
+          cpcbPm25SubIndex: 50,
+        },
+        {
+          isoTime: '2026-11-27T13:00',
+          hourLabel: '1 PM',
+          pm2_5: 28,
+          pm10: 55,
+          us_aqi: 75,
+          cpcbPm25SubIndex: 47,
+        },
       ],
     };
     const vent = analyzeVentilationWindows(liveData.hourly24h, 120, 2);
-    const swaps = { selectedCount: 1, weeklyCo2KgAvoided: 10, annualCo2KgAvoided: 480, pm25ExposureReductionPct: 22, monthlyRupeesSaved: 1500, rows: [] };
+    const swaps = {
+      selectedCount: 1,
+      weeklyCo2KgAvoided: 10,
+      annualCo2KgAvoided: 480,
+      pm25ExposureReductionPct: 22,
+      monthlyRupeesSaved: 1500,
+      rows: [],
+    };
     const hepaProfile = EVALUATOR_SAMPLE_PROFILES[0].profile;
 
-    expect(buildFallbackQuestions(liveData, cpcb, EMPTY_HOUSEHOLD_PROFILE).source).toBe('deterministic');
+    expect(buildFallbackQuestions(liveData, cpcb, EMPTY_HOUSEHOLD_PROFILE).source).toBe(
+      'deterministic',
+    );
     expect(buildFallbackQuestions(liveData, cpcb, hepaProfile).source).toBe('deterministic');
-    expect(buildFallbackRoutine(liveData, cpcb, EMPTY_HOUSEHOLD_PROFILE, vent).source).toBe('deterministic');
+    expect(buildFallbackRoutine(liveData, cpcb, EMPTY_HOUSEHOLD_PROFILE, vent).source).toBe(
+      'deterministic',
+    );
     expect(buildFallbackRoutine(liveData, cpcb, hepaProfile, vent).source).toBe('deterministic');
-    expect(buildFallbackIndoorProtocol(liveData, cpcb, EMPTY_HOUSEHOLD_PROFILE).source).toBe('deterministic');
+    expect(buildFallbackIndoorProtocol(liveData, cpcb, EMPTY_HOUSEHOLD_PROFILE).source).toBe(
+      'deterministic',
+    );
     expect(buildFallbackIndoorProtocol(liveData, cpcb, hepaProfile).source).toBe('deterministic');
     expect(buildFallbackShockStrategies('Power cut', liveData, cpcb).source).toBe('deterministic');
-    expect(buildFallbackCommunityBriefing(liveData, cpcb, hepaProfile, vent, swaps).source).toBe('deterministic');
+    expect(buildFallbackCommunityBriefing(liveData, cpcb, hepaProfile, vent, swaps).source).toBe(
+      'deterministic',
+    );
   });
 });

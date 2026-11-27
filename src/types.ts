@@ -3,15 +3,11 @@ export type WorkspaceId = 'intake' | 'routine' | 'indoor' | 'simulator' | 'commu
 export type PollutantKey = 'pm2_5' | 'pm10' | 'nitrogen_dioxide' | 'ozone' | 'sulphur_dioxide';
 
 export type CpcbCategoryName =
-  | 'Good'
-  | 'Satisfactory'
-  | 'Moderate'
-  | 'Poor'
-  | 'Very Poor'
-  | 'Severe';
+  'Good' | 'Satisfactory' | 'Moderate' | 'Poor' | 'Very Poor' | 'Severe';
 
 export type CookingFuel = 'lpg_gas' | 'png_gas' | 'induction';
-export type CommuteMode = 'petrol_car' | 'metro' | 'two_wheeler' | 'bus_auto' | 'walk_cycle' | 'hybrid_wfh';
+export type CommuteMode =
+  'petrol_car' | 'metro' | 'two_wheeler' | 'bus_auto' | 'walk_cycle' | 'hybrid_wfh';
 export type TimeSlotName = 'Morning' | 'Midday' | 'Evening' | 'Night';
 
 export interface CityLocation {

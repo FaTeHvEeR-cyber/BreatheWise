@@ -1,9 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import {
-  calculateHabitSwapImpact,
-  calculateIndoorMitigationImpact,
-} from './emissionsCalculator';
+import { calculateHabitSwapImpact, calculateIndoorMitigationImpact } from './emissionsCalculator';
 
 test('indoor mitigation meter quantifies HEPA vs zero-purifier and gas vs induction reductions', () => {
   const hepaInduction = calculateIndoorMitigationImpact(150, {

@@ -1,3 +1,7 @@
+import { DEFAULT_AUTO_REFRESH_MS } from '../config/constants';
+
+export { DEFAULT_AUTO_REFRESH_MS };
+
 export interface FormattedDateTime {
   dateLabel: string;
   timeLabel: string;
@@ -5,8 +9,18 @@ export interface FormattedDateTime {
 }
 
 const MONTHS_SHORT = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ] as const;
 
 function format12Hour(hours24: number, minutes: number, seconds?: number): string {
@@ -108,8 +122,7 @@ export function formatRefreshDateTime(
   }
 }
 
-export const DEFAULT_AUTO_REFRESH_MS = 5 * 60 * 1000;
-
+/** Returns true when at least intervalMs has elapsed since the last telemetry fetch. */
 export function shouldAutoRefresh(
   lastFetchedAtMs: number | null,
   nowMs: number,

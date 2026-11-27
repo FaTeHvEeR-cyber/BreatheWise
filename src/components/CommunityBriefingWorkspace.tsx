@@ -74,8 +74,14 @@ export default function CommunityBriefingWorkspace({
   const handleDownloadJson = () => {
     const payload = buildPayload();
     const slug = liveData.location.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    triggerFileDownload(`breathewise-runbook-${slug}.json`, JSON.stringify(payload, null, 2), 'application/json');
-    setExportNote(`Exported breathewise-runbook-${slug}.json with live Open-Meteo timestamp ${liveData.readingIsoTime}.`);
+    triggerFileDownload(
+      `breathewise-runbook-${slug}.json`,
+      JSON.stringify(payload, null, 2),
+      'application/json',
+    );
+    setExportNote(
+      `Exported breathewise-runbook-${slug}.json with live Open-Meteo timestamp ${liveData.readingIsoTime}.`,
+    );
   };
 
   const handleDownloadMarkdown = () => {
@@ -88,22 +94,34 @@ export default function CommunityBriefingWorkspace({
 
   const shareCards = communitySlot.data
     ? [
-        { id: 'whatsapp', title: 'WhatsApp Family Group Advisory', text: communitySlot.data.whatsappAdvisory },
+        {
+          id: 'whatsapp',
+          title: 'WhatsApp Family Group Advisory',
+          text: communitySlot.data.whatsappAdvisory,
+        },
         { id: 'rwa', title: 'RWA / Apartment Society Notice', text: communitySlot.data.rwaNotice },
-        { id: 'carpool', title: 'School / Office Carpool Pitch', text: communitySlot.data.carpoolPitch },
+        {
+          id: 'carpool',
+          title: 'School / Office Carpool Pitch',
+          text: communitySlot.data.carpoolPitch,
+        },
       ]
     : [];
 
   return (
     <div id="panel-community" role="tabpanel" aria-labelledby="tab-community" className="space-y-6">
-      <section aria-label="Community and family briefing generator" className="border border-slate-200 bg-white p-6">
+      <section
+        aria-label="Community and family briefing generator"
+        className="border border-slate-200 bg-white p-6"
+      >
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
               Family & Community Clean-Air Briefing
             </h2>
             <p className="text-xs text-slate-600">
-              Synthesizes live {liveData.location.name} CPCB AQI ({cpcb.aqi}), your cleanest ventilation window, and weekly low-emission savings into ready-to-share messages.
+              Synthesizes live {liveData.location.name} CPCB AQI ({cpcb.aqi}), your cleanest
+              ventilation window, and weekly low-emission savings into ready-to-share messages.
             </p>
           </div>
           <button
@@ -121,14 +139,21 @@ export default function CommunityBriefingWorkspace({
         </div>
 
         {communitySlot.error && (
-          <p role="status" className="mt-4 border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-900">
-            Gemini live note ({communitySlot.error}) — showing deterministic advisories grounded in live Open-Meteo data.
+          <p
+            role="status"
+            className="mt-4 border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-900"
+          >
+            Gemini live note ({communitySlot.error}) — showing deterministic advisories grounded in
+            live Open-Meteo data.
           </p>
         )}
 
         {!communitySlot.data && !communitySlot.loading && (
           <p className="mt-4 text-sm text-slate-600">
-            Click <strong className="font-medium text-slate-900">Generate Community Briefing</strong> to create an executive air-health snapshot plus copyable WhatsApp, RWA, and carpool notices.
+            Click{' '}
+            <strong className="font-medium text-slate-900">Generate Community Briefing</strong> to
+            create an executive air-health snapshot plus copyable WhatsApp, RWA, and carpool
+            notices.
           </p>
         )}
 
@@ -140,7 +165,9 @@ export default function CommunityBriefingWorkspace({
                   Executive Air-Health Snapshot
                 </p>
                 {communitySlot.data.source && (
-                  <span className="font-mono text-[11px] text-slate-600">Source: {communitySlot.data.source}</span>
+                  <span className="font-mono text-[11px] text-slate-600">
+                    Source: {communitySlot.data.source}
+                  </span>
                 )}
               </div>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-900">
@@ -152,7 +179,10 @@ export default function CommunityBriefingWorkspace({
               {shareCards.map((card) => {
                 const isCopied = copiedKey === card.id;
                 return (
-                  <article key={card.id} className="flex flex-col justify-between border border-slate-200 p-5">
+                  <article
+                    key={card.id}
+                    className="flex flex-col justify-between border border-slate-200 p-5"
+                  >
                     <div>
                       <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                         <h3 className="text-sm font-semibold text-slate-900">{card.title}</h3>
@@ -187,14 +217,18 @@ export default function CommunityBriefingWorkspace({
         )}
       </section>
 
-      <section aria-label="Master Clean-Air Runbook export" className="border border-slate-200 bg-white p-6">
+      <section
+        aria-label="Master Clean-Air Runbook export"
+        className="border border-slate-200 bg-white p-6"
+      >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
               Master Clean-Air Runbook Export
             </h2>
             <p className="mt-1 text-xs text-slate-600">
-              Downloads your live {liveData.location.name} CPCB AQI audit, ventilation window, indoor mitigation meter, swap savings, and generated plans.
+              Downloads your live {liveData.location.name} CPCB AQI audit, ventilation window,
+              indoor mitigation meter, swap savings, and generated plans.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">

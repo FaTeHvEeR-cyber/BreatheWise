@@ -33,7 +33,10 @@ export function IndoorReductionMeter({ meter }: IndoorReductionMeterProps) {
               </span>
             </div>
             <div className="mt-1.5 h-3 w-full bg-slate-100">
-              <div style={{ width: `${beforePct}%` }} className="h-full bg-rose-700 transition-all" />
+              <div
+                style={{ width: `${beforePct}%` }}
+                className="h-full bg-rose-700 transition-all"
+              />
             </div>
           </div>
 
@@ -45,7 +48,10 @@ export function IndoorReductionMeter({ meter }: IndoorReductionMeterProps) {
               </span>
             </div>
             <div className="mt-1.5 h-3 w-full bg-slate-100">
-              <div style={{ width: `${afterPct}%` }} className="h-full bg-teal-700 transition-all" />
+              <div
+                style={{ width: `${afterPct}%` }}
+                className="h-full bg-teal-700 transition-all"
+              />
             </div>
           </div>
         </div>
@@ -54,7 +60,9 @@ export function IndoorReductionMeter({ meter }: IndoorReductionMeterProps) {
       <ul className="mt-5 space-y-1.5 border-t border-slate-200 pt-4 text-xs text-slate-700">
         {meter.appliedMeasures.map((measure) => (
           <li key={measure} className="flex items-start gap-2">
-            <span aria-hidden="true" className="font-mono text-teal-800">•</span>
+            <span aria-hidden="true" className="font-mono text-teal-800">
+              •
+            </span>
             <span>{measure}</span>
           </li>
         ))}

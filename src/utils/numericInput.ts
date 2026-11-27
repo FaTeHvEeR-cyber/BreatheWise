@@ -28,11 +28,11 @@ export function finalizeIntegerInput(
 /**
  * Guarantees active rooms/zones is always within [1, totalRooms].
  */
-export function clampActiveRooms(
-  activeRooms: number | undefined,
-  totalRooms: number,
-): number {
-  const safeTotal = Math.max(1, Math.min(20, Math.round(Number.isFinite(totalRooms) ? totalRooms : 1)));
+export function clampActiveRooms(activeRooms: number | undefined, totalRooms: number): number {
+  const safeTotal = Math.max(
+    1,
+    Math.min(20, Math.round(Number.isFinite(totalRooms) ? totalRooms : 1)),
+  );
   if (activeRooms === undefined || !Number.isFinite(activeRooms)) return safeTotal;
   return Math.max(1, Math.min(safeTotal, Math.round(activeRooms)));
 }

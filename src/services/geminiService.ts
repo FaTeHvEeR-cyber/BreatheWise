@@ -23,12 +23,12 @@ import {
   SmogShockModelSchema,
 } from '../validation/aqiContracts.js';
 
-const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
-const PER_ATTEMPT_TIMEOUT_MS = 20_000;
-const PLACEHOLDER_API_KEYS = new Set([
-  'your_google_ai_studio_api_key_here',
-  'MY_GEMINI_API_KEY',
-]);
+import {
+  DEFAULT_GEMINI_MODEL,
+  FALLBACK_GEMINI_MODEL,
+  PER_ATTEMPT_TIMEOUT_MS,
+  PLACEHOLDER_GEMINI_KEYS,
+} from '../config/constants.js';
 
 const SYSTEM_INSTRUCTION = [
   'You are BreatheWise, a concise urban air-quality and low-emission advisor for Indian cities.',
@@ -50,13 +50,13 @@ let cachedApiKey: string | null = null;
 
 function getModelChain(): readonly string[] {
   const configured = (process.env.GEMINI_MODEL ?? '').trim();
-  const primary = configured || 'gemini-3.8-flash';
-  return primary === FALLBACK_MODEL ? [primary] : [primary, FALLBACK_MODEL];
+  const primary = configured || DEFAULT_GEMINI_MODEL;
+  return primary === FALLBACK_GEMINI_MODEL ? [primary] : [primary, FALLBACK_GEMINI_MODEL];
 }
 
 function getClient(): GoogleGenAI {
   const apiKey = (process.env.GEMINI_API_KEY ?? '').trim();
-  if (!apiKey || PLACEHOLDER_API_KEYS.has(apiKey)) {
+  if (!apiKey || PLACEHOLDER_GEMINI_KEYS.has(apiKey)) {
     throw new Error('GEMINI_API_KEY is not configured.');
   }
   if (cachedClient && cachedApiKey === apiKey) {
@@ -70,10 +70,17 @@ function getClient(): GoogleGenAI {
 function isRetryableModelError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return (
-    msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('429') ||
-    msg.includes('high demand') || msg.includes('no longer available') ||
-    msg.includes('not found') || msg.includes('404') || msg.includes('timed out') ||
-    msg.includes('500') || msg.includes('INTERNAL') || msg.includes('RESOURCE_EXHAUSTED')
+    msg.includes('503') ||
+    msg.includes('UNAVAILABLE') ||
+    msg.includes('429') ||
+    msg.includes('high demand') ||
+    msg.includes('no longer available') ||
+    msg.includes('not found') ||
+    msg.includes('404') ||
+    msg.includes('timed out') ||
+    msg.includes('500') ||
+    msg.includes('INTERNAL') ||
+    msg.includes('RESOURCE_EXHAUSTED')
   );
 }
 
@@ -81,23 +88,37 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`Gemini request timed out after ${ms}ms`)), ms);
     promise.then(
-      (val) => { clearTimeout(timer); resolve(val); },
-      (err) => { clearTimeout(timer); reject(err); },
+      (val) => {
+        clearTimeout(timer);
+        resolve(val);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
     );
   });
 }
 
 function parseModelJson(rawText: string): unknown {
-  const cleaned = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  const cleaned = rawText
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
   return JSON.parse(cleaned) as unknown;
 }
 
 function buildClarifyingQuestionsPrompt(context: Record<string, unknown>): string {
   const count = typeof context.requestedCount === 'number' && context.requestedCount === 2 ? 2 : 3;
-  const focus = context.focus === 'indoor' ? 'indoor air-quality and budget-mode mitigation' : 'daily low-emission routine';
-  const avoidNote = Array.isArray(context.existingQuestions) && context.existingQuestions.length > 0
-    ? ' Do NOT repeat any question listed in existingQuestions.'
-    : '';
+  const focus =
+    context.focus === 'indoor'
+      ? 'indoor air-quality and budget-mode mitigation'
+      : 'daily low-emission routine';
+  const avoidNote =
+    Array.isArray(context.existingQuestions) && context.existingQuestions.length > 0
+      ? ' Do NOT repeat any question listed in existingQuestions.'
+      : '';
   return `Live air data & context:\n${JSON.stringify(context)}\nReturn 1 short airContextNote sentence and exactly ${count} crisp ${focus} clarifying questions with 3 short quickOptions each.${avoidNote}`;
 }
 
@@ -137,9 +158,12 @@ async function generateStructuredJson<T extends Record<string, unknown>>(
       }
     }
   }
-  throw lastError instanceof Error ? lastError : new Error('Gemini service temporarily unavailable.');
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Gemini service temporarily unavailable.');
 }
 
+/** Streams clarifying questions from Gemini with automatic fallback across MODEL_CHAIN. */
 export async function streamClarifyingQuestions(
   context: Record<string, unknown>,
   onChunk: (delta: string) => void,
@@ -195,9 +219,12 @@ export async function streamClarifyingQuestions(
     }
   }
 
-  throw lastError instanceof Error ? lastError : new Error('Gemini service temporarily unavailable.');
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Gemini service temporarily unavailable.');
 }
 
+/** Generates non-streaming clarifying intake questions via Gemini structured JSON. */
 export function generateClarifyingQuestions(
   context: Record<string, unknown>,
 ): Promise<ClarifyingQuestionsResponse> {
@@ -210,6 +237,7 @@ export function generateClarifyingQuestions(
   );
 }
 
+/** Generates a 4-block low-emission daily routine grounded in live CPCB AQI data. */
 export function generateDailyRoutine(
   context: Record<string, unknown>,
 ): Promise<DailyRoutineResponse> {
@@ -217,6 +245,7 @@ export function generateDailyRoutine(
   return generateStructuredJson(prompt, DAILY_ROUTINE_SCHEMA, DailyRoutineModelSchema);
 }
 
+/** Generates a room-by-room indoor air mitigation protocol tailored to the home setup. */
 export function generateIndoorProtocol(
   context: Record<string, unknown>,
 ): Promise<IndoorProtocolResponse> {
@@ -224,13 +253,13 @@ export function generateIndoorProtocol(
   return generateStructuredJson(prompt, INDOOR_PROTOCOL_SCHEMA, IndoorProtocolModelSchema);
 }
 
-export function simulateSmogShock(
-  context: Record<string, unknown>,
-): Promise<SmogShockResponse> {
+/** Simulates a sudden smog shock scenario and returns 3 routine fallback strategies. */
+export function simulateSmogShock(context: Record<string, unknown>): Promise<SmogShockResponse> {
   const prompt = `Simulate this sudden smog shock scenario layered onto the household's live city AQI and active routine, returning 3 immediate fallback strategies that update specific routine blocks:\n${JSON.stringify(context)}`;
   return generateStructuredJson(prompt, SMOG_SHOCK_SCHEMA, SmogShockModelSchema);
 }
 
+/** Synthesizes live AQI and habit swap savings into shareable family, RWA, and carpool notices. */
 export function generateCommunityBriefing(
   context: Record<string, unknown>,
 ): Promise<CommunityBriefingResponse> {
