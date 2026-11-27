@@ -1,10 +1,12 @@
+import type { ReactElement } from 'react';
 import type { IndoorMitigationMeter } from '../utils/emissionsCalculator';
 
 interface IndoorReductionMeterProps {
-  meter: IndoorMitigationMeter;
+  readonly meter: IndoorMitigationMeter;
 }
 
-export function IndoorReductionMeter({ meter }: IndoorReductionMeterProps) {
+/** Visualizes deterministic before-and-after indoor PM2.5 exposure reduction. */
+export function IndoorReductionMeter({ meter }: IndoorReductionMeterProps): ReactElement {
   const maxBar = Math.max(meter.beforePm25, meter.outdoorPm25, 25);
   const beforePct = Math.min(100, Math.round((meter.beforePm25 / maxBar) * 100));
   const afterPct = Math.min(100, Math.round((meter.afterPm25 / maxBar) * 100));

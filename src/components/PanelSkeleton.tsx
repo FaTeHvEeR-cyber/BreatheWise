@@ -1,8 +1,13 @@
+import type { ReactElement } from 'react';
+
 interface PanelSkeletonProps {
-  label?: string;
+  readonly label?: string;
 }
 
-export function PanelSkeleton({ label = 'Loading air quality workspace…' }: PanelSkeletonProps) {
+/** Accessible loading placeholder skeleton for lazy-loaded AQI workspaces. */
+export function PanelSkeleton({
+  label = 'Loading air quality workspace…',
+}: PanelSkeletonProps): ReactElement {
   return (
     <div
       role="status"

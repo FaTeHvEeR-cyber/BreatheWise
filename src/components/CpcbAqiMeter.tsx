@@ -1,13 +1,15 @@
+import type { ReactElement } from 'react';
 import type { CpcbAqiResult } from '../types';
 import { CPCB_SCALE_TICKS, getAqiScalePercent, getCpcbScaleSegments } from '../utils/cpcbAqi';
 
 interface CpcbAqiMeterProps {
-  cpcb: CpcbAqiResult;
+  readonly cpcb: CpcbAqiResult;
 }
 
 const SEGMENTS = getCpcbScaleSegments();
 
-export function CpcbAqiMeter({ cpcb }: CpcbAqiMeterProps) {
+/** Renders the segmented CPCB National AQI meter bar and category indicator. */
+export function CpcbAqiMeter({ cpcb }: CpcbAqiMeterProps): ReactElement {
   const markerPercent = getAqiScalePercent(cpcb.aqi);
   // Keep floating readout tag inside horizontal bounds near 0 or 500 while the thumb stays exact.
   const calloutPercent = Math.max(7, Math.min(93, markerPercent));

@@ -12,21 +12,22 @@ import type { VentilationAnalysis } from '../utils/ventilationWindows';
 import { callDailyRoutine, callIndoorProtocol } from '../services/aiClient';
 import { buildDailyRoutinePayload, buildIndoorProtocolPayload } from '../utils/aiPayloads';
 import { buildFallbackIndoorProtocol, buildFallbackRoutine } from '../utils/fallbackAdvisor';
-import { EMPTY_SLOT, useIntakeQuestionsAi, type AsyncSlot } from './useIntakeQuestionsAi';
+import { EMPTY_SLOT, type AsyncSlot, type UseBreatheWiseAiReturn } from './hookTypes';
+import { useIntakeQuestionsAi } from './useIntakeQuestionsAi';
 import { useShockAndCommunityAi } from './useShockAndCommunityAi';
 
 export type { AsyncSlot };
 
 interface UseBreatheWiseAiParams {
-  liveData: LiveAirQualityData | null;
-  cpcb: CpcbAqiResult | null;
-  ventilation: VentilationAnalysis | null;
-  profile: HouseholdProfile;
-  hasHouseholdProfile: boolean;
-  indoorMeter: IndoorMitigationMeter;
-  swapTotals: HabitSwapTotals;
-  indoorAnswers: Record<string, string>;
-  onNavigateWorkspace: (ws: WorkspaceId) => void;
+  readonly liveData: LiveAirQualityData | null;
+  readonly cpcb: CpcbAqiResult | null;
+  readonly ventilation: VentilationAnalysis | null;
+  readonly profile: HouseholdProfile;
+  readonly hasHouseholdProfile: boolean;
+  readonly indoorMeter: IndoorMitigationMeter;
+  readonly swapTotals: HabitSwapTotals;
+  readonly indoorAnswers: Record<string, string>;
+  readonly onNavigateWorkspace: (ws: WorkspaceId) => void;
 }
 
 /** Manages versioned AI request slots, streaming questions, and deterministic fallbacks. */
@@ -40,7 +41,7 @@ export function useBreatheWiseAi({
   swapTotals,
   indoorAnswers,
   onNavigateWorkspace,
-}: UseBreatheWiseAiParams) {
+}: UseBreatheWiseAiParams): UseBreatheWiseAiReturn {
   const [additionalContext, setAdditionalContext] = useState<string>('');
   const [routineSlot, setRoutineSlot] = useState<AsyncSlot<DailyRoutineResponse>>({
     ...EMPTY_SLOT,

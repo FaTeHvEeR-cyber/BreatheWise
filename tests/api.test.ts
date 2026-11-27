@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetRateLimiter } from '../src/services/rateLimiter';
 import {
   createMockRes,
   MOCK_GEMINI_RESPONSES,
@@ -35,6 +36,7 @@ const jsonHeaders = { 'content-type': 'application/json' };
 describe('Vercel API functional endpoints & Gemini responses', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetRateLimiter();
     process.env.GEMINI_API_KEY = 'test-secret-api-key-12345';
     delete process.env.GEMINI_MODEL;
   });

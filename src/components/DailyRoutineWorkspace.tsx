@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import type {
   CpcbAqiResult,
   DailyRoutineResponse,
@@ -9,19 +10,20 @@ import type { VentilationAnalysis } from '../utils/ventilationWindows';
 import { Pm25ForecastChart } from './Pm25ForecastChart';
 
 interface DailyRoutineWorkspaceProps {
-  liveData: LiveAirQualityData;
-  cpcb: CpcbAqiResult;
-  profile: HouseholdProfile;
-  hasHouseholdProfile: boolean;
-  ventilation: VentilationAnalysis;
-  routineSlot: AsyncSlot<DailyRoutineResponse>;
-  completedBlockIds: readonly string[];
-  protectionScorePct: number;
-  appliedShockNote: string | null;
-  onToggleBlock: (blockId: string) => void;
-  onGenerateRoutine: () => void;
+  readonly liveData: LiveAirQualityData;
+  readonly cpcb: CpcbAqiResult;
+  readonly profile: HouseholdProfile;
+  readonly hasHouseholdProfile: boolean;
+  readonly ventilation: VentilationAnalysis;
+  readonly routineSlot: AsyncSlot<DailyRoutineResponse>;
+  readonly completedBlockIds: readonly string[];
+  readonly protectionScorePct: number;
+  readonly appliedShockNote: string | null;
+  readonly onToggleBlock: (blockId: string) => void;
+  readonly onGenerateRoutine: () => void;
 }
 
+/** Displays 24-hour PM2.5 ventilation windows and personalized daily routine blocks. */
 export default function DailyRoutineWorkspace({
   liveData,
   cpcb,
@@ -34,7 +36,7 @@ export default function DailyRoutineWorkspace({
   appliedShockNote,
   onToggleBlock,
   onGenerateRoutine,
-}: DailyRoutineWorkspaceProps) {
+}: DailyRoutineWorkspaceProps): ReactElement {
   return (
     <div id="panel-routine" role="tabpanel" aria-labelledby="tab-routine" className="space-y-6">
       <section

@@ -1,18 +1,20 @@
+import type { ReactElement } from 'react';
 import { RefreshCw } from 'lucide-react';
 import type { CityLocation, CpcbAqiResult, HouseholdProfile, LiveAirQualityData } from '../types';
 import { formatReadingDateTime, formatRefreshDateTime } from '../utils/timeFormatting';
 
 interface LiveAqiRibbonProps {
-  location: CityLocation;
-  liveData: LiveAirQualityData | null;
-  cpcb: CpcbAqiResult | null;
-  profile: HouseholdProfile;
-  hasHouseholdProfile: boolean;
-  protectionScorePct: number;
-  loading: boolean;
-  onRefresh: () => void;
+  readonly location: CityLocation;
+  readonly liveData: LiveAirQualityData | null;
+  readonly cpcb: CpcbAqiResult | null;
+  readonly profile: HouseholdProfile;
+  readonly hasHouseholdProfile: boolean;
+  readonly protectionScorePct: number;
+  readonly loading: boolean;
+  readonly onRefresh: () => void;
 }
 
+/** Provenance banner showing live CPCB reading timestamp, city, and readiness score. */
 export function LiveAqiRibbon({
   location,
   liveData,
@@ -22,7 +24,7 @@ export function LiveAqiRibbon({
   protectionScorePct,
   loading,
   onRefresh,
-}: LiveAqiRibbonProps) {
+}: LiveAqiRibbonProps): ReactElement {
   const reading = liveData ? formatReadingDateTime(liveData.readingIsoTime) : null;
   const refreshed = liveData
     ? formatRefreshDateTime(liveData.fetchedAtIso, location.timezone)

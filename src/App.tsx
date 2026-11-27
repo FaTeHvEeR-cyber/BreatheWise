@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { type ReactElement, lazy, Suspense, useState } from 'react';
 import { useAirQualityApp } from './hooks/useAirQualityApp';
 import { Header } from './components/Header';
 import { LiveAqiRibbon } from './components/LiveAqiRibbon';
@@ -14,7 +14,8 @@ const AlternativesSimulatorWorkspace = lazy(
 );
 const CommunityBriefingWorkspace = lazy(() => import('./components/CommunityBriefingWorkspace'));
 
-export default function App() {
+/** Root BreatheWise application shell coordinating AQI workspaces and dialogs. */
+export default function App(): ReactElement {
   const app = useAirQualityApp();
   const [auditOpen, setAuditOpen] = useState<boolean>(false);
 

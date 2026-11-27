@@ -20,14 +20,15 @@ import {
 } from '../utils/dataVisualization';
 import type { TimeWindowBand } from '../utils/ventilationWindows';
 
+/** Synchronized properties for the 24-hour PM2.5 trend visualization chart. */
 export interface Pm25ForecastChartProps {
-  hourly24h: readonly HourlyForecastPoint[];
-  bestWindow: TimeWindowBand | null;
+  readonly hourly24h: readonly HourlyForecastPoint[];
+  readonly bestWindow: TimeWindowBand | null;
 }
 
 interface CustomTooltipProps {
-  active?: boolean;
-  payload?: ReadonlyArray<{ payload?: Pm25ChartDatum }>;
+  readonly active?: boolean;
+  readonly payload?: ReadonlyArray<{ readonly payload?: Pm25ChartDatum }>;
 }
 
 const AXIS_TICK = { fill: '#475569', fontSize: 11, fontFamily: 'IBM Plex Mono, monospace' };

@@ -1,19 +1,21 @@
+import type { ReactElement } from 'react';
 import type { HouseholdProfile } from '../types';
 import { FUEL_OPTIONS } from '../data/breatheWisePresets';
 import { clampActiveRooms } from '../utils/numericInput';
 import { InfoTooltip } from './InfoTooltip';
 
 interface IndoorSetupCardProps {
-  profile: HouseholdProfile;
-  hasHouseholdProfile: boolean;
-  onUpdateProfile: (patch: Partial<HouseholdProfile>) => void;
+  readonly profile: HouseholdProfile;
+  readonly hasHouseholdProfile: boolean;
+  readonly onUpdateProfile: (patch: Partial<HouseholdProfile>) => void;
 }
 
+/** Synchronized home filtration, fuel, and room-count configuration controls. */
 export function IndoorSetupCard({
   profile,
   hasHouseholdProfile,
   onUpdateProfile,
-}: IndoorSetupCardProps) {
+}: IndoorSetupCardProps): ReactElement {
   const totalRooms = Math.max(1, profile.roomCount);
   const activeRooms = clampActiveRooms(profile.activeRoomCount, totalRooms);
 

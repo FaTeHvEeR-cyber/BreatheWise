@@ -1,16 +1,19 @@
-import { useId, useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import { Search } from 'lucide-react';
 import type { CityLocation } from '../types';
 import { QUICK_INDIAN_CITIES } from '../data/breatheWisePresets';
 import { useCitySearch } from '../hooks/useCitySearch';
 
 interface CitySearchSectionProps {
-  location: CityLocation;
-  onSelectCity: (city: CityLocation) => void;
+  readonly location: CityLocation;
+  readonly onSelectCity: (city: CityLocation) => void;
 }
 
 /** City geocoding search combobox and quick Indian city preset chips. */
-export function CitySearchSection({ location, onSelectCity }: CitySearchSectionProps) {
+export function CitySearchSection({
+  location,
+  onSelectCity,
+}: CitySearchSectionProps): ReactElement {
   const { query, setQuery, results, searching, searchError, clearSearch } = useCitySearch();
   const [openDropdown, setOpenDropdown] = useState<boolean>(false);
   const inputId = useId();

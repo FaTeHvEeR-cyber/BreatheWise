@@ -1,30 +1,25 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type {
-  CityLocation,
-  EvaluatorSampleProfile,
-  HouseholdProfile,
-  LiveAirQualityData,
-  WorkspaceId,
-} from '../types';
+import { useCallback, useMemo, useState } from 'react';
+import type { CityLocation, EvaluatorSampleProfile, HouseholdProfile, WorkspaceId } from '../types';
 import { EMPTY_HOUSEHOLD_PROFILE, QUICK_INDIAN_CITIES } from '../data/breatheWisePresets';
-import { fetchLiveCityAirQuality } from '../services/aqiService';
 import { computeCpcbAqi } from '../utils/cpcbAqi';
 import { analyzeVentilationWindows } from '../utils/ventilationWindows';
 import {
   calculateHabitSwapImpact,
   calculateIndoorMitigationImpact,
 } from '../utils/emissionsCalculator';
-import { DEFAULT_AUTO_REFRESH_MS, shouldAutoRefresh } from '../utils/timeFormatting';
+import { DEFAULT_AUTO_REFRESH_MS } from '../utils/timeFormatting';
 import { applyRoomProfilePatch } from '../utils/numericInput';
+import type { UseAirQualityAppReturn } from './hookTypes';
 import { useBreatheWiseAi } from './useBreatheWiseAi';
 import { useIndoorQuestions } from './useIndoorQuestions';
+import { useLiveAqiTelemetry } from './useLiveAqiTelemetry';
 
-export type { AsyncSlot } from './useBreatheWiseAi';
+export type { AsyncSlot } from './hookTypes';
 
 export const AUTO_REFRESH_INTERVAL_MS = DEFAULT_AUTO_REFRESH_MS;
 
 /** Top-level application state hook coordinating Open-Meteo telemetry, presets, and AI slots. */
-export function useAirQualityApp() {
+export function useAirQualityApp(): UseAirQualityAppReturn {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceId>('intake');
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [hasHouseholdProfile, setHasHouseholdProfile] = useState<boolean>(false);
@@ -35,75 +30,7 @@ export function useAirQualityApp() {
     'midday-venting',
   ]);
 
-  const [liveData, setLiveData] = useState<LiveAirQualityData | null>(null);
-  const [aqiLoading, setAqiLoading] = useState<boolean>(true);
-  const [aqiError, setAqiError] = useState<string | null>(null);
-  const [refreshTick, setRefreshTick] = useState<number>(0);
-
-  const abortRef = useRef<AbortController | null>(null);
-  const isFetchingRef = useRef<boolean>(false);
-  const lastFetchedAtMsRef = useRef<number | null>(null);
-
-  const refreshAqi = useCallback(() => {
-    setRefreshTick((n) => n + 1);
-  }, []);
-
-  useEffect(() => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    isFetchingRef.current = true;
-    setLiveData((prev) => (prev && prev.location.id === location.id ? prev : null));
-    setAqiLoading(true);
-    setAqiError(null);
-
-    fetchLiveCityAirQuality(location, controller.signal)
-      .then((fetched) => {
-        if (!controller.signal.aborted) {
-          isFetchingRef.current = false;
-          lastFetchedAtMsRef.current = Date.now();
-          setLiveData(fetched);
-          setAqiLoading(false);
-        }
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted) return;
-        isFetchingRef.current = false;
-        setAqiError(err instanceof Error ? err.message : 'Unable to load Open-Meteo telemetry.');
-        setAqiLoading(false);
-      });
-
-    return () => {
-      isFetchingRef.current = false;
-      controller.abort();
-    };
-  }, [location, refreshTick]);
-
-  // Automatic 5-minute interval timer + stale-tab wakeup refresh without wiping current UI
-  useEffect(() => {
-    const triggerAutoRefresh = () => {
-      if (!isFetchingRef.current) {
-        refreshAqi();
-      }
-    };
-
-    const intervalId = window.setInterval(triggerAutoRefresh, AUTO_REFRESH_INTERVAL_MS);
-
-    const handleVisibilityChange = () => {
-      if (
-        document.visibilityState === 'visible' &&
-        shouldAutoRefresh(lastFetchedAtMsRef.current, Date.now(), AUTO_REFRESH_INTERVAL_MS)
-      ) {
-        triggerAutoRefresh();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      window.clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [location, refreshAqi]);
+  const { liveData, aqiLoading, aqiError, refreshAqi } = useLiveAqiTelemetry(location);
 
   const currentPm25 = liveData?.current.pm2_5 ?? 0;
   const cpcb = useMemo(() => (liveData ? computeCpcbAqi(liveData.current) : null), [liveData]);
@@ -121,13 +48,7 @@ export function useAirQualityApp() {
     [selectedSwapIds, profile.commuteDistanceKm, currentPm25],
   );
 
-  const indoorQ = useIndoorQuestions({
-    liveData,
-    cpcb,
-    profile,
-    hasHouseholdProfile,
-  });
-
+  const indoorQ = useIndoorQuestions({ liveData, cpcb, profile, hasHouseholdProfile });
   const ai = useBreatheWiseAi({
     liveData,
     cpcb,

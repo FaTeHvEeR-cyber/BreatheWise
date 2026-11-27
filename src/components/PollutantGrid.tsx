@@ -1,11 +1,13 @@
+import type { ReactElement } from 'react';
 import type { CpcbAqiResult } from '../types';
 
 interface PollutantGridProps {
-  cpcb: CpcbAqiResult;
-  usAqi: number | null;
+  readonly cpcb: CpcbAqiResult;
+  readonly usAqi: number | null;
 }
 
-export function PollutantGrid({ cpcb, usAqi }: PollutantGridProps) {
+/** Displays live pollutant concentrations, CPCB sub-indices, and WHO 2021 ratios. */
+export function PollutantGrid({ cpcb, usAqi }: PollutantGridProps): ReactElement {
   return (
     <div className="p-6 lg:col-span-7">
       <div className="mb-4 flex items-baseline justify-between">

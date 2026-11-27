@@ -1,13 +1,13 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallbackTitle?: string;
-  onReset?: () => void;
+  readonly children: ReactNode;
+  readonly fallbackTitle?: string;
+  readonly onReset?: () => void;
 }
 
 interface ErrorBoundaryState {
-  hasError: boolean;
+  readonly hasError: boolean;
 }
 
 /**

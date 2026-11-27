@@ -80,4 +80,42 @@ describe('aqiService Open-Meteo integration', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response('fail', { status: 503 })));
     await expect(fetchLiveCityAirQuality(QUICK_INDIAN_CITIES[0])).rejects.toThrow('HTTP 503');
   });
+
+  it('handles geocoding HTTP errors, empty results, and missing AQI payload fields', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response('bad', { status: 502 })));
+    await expect(searchIndianAndGlobalCities('Jaipur')).rejects.toThrow('HTTP 502');
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            results: [{ id: 99, name: 'Testville', latitude: 25.12345, longitude: 75.98765 }],
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+    const fallbackMeta = await searchIndianAndGlobalCities('Testville');
+    expect(fallbackMeta[0].country).toBe('Unknown');
+    expect(fallbackMeta[0].timezone).toBe('Asia/Kolkata');
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({}), { status: 200 })),
+    );
+    expect(await searchIndianAndGlobalCities('NowhereCity')).toEqual([]);
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({}), { status: 200 })),
+    );
+    const minimal = await fetchLiveCityAirQuality({
+      ...QUICK_INDIAN_CITIES[0],
+      timezone: '',
+    });
+    expect(minimal.current.pm2_5).toBeNull();
+    expect(minimal.hourly24h).toEqual([]);
+    expect(minimal.readingIsoTime).toBe(minimal.fetchedAtIso);
+  });
 });

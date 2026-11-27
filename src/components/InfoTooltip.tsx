@@ -1,13 +1,14 @@
-import { useId } from 'react';
+import { type ReactElement, useId } from 'react';
 import { Info } from 'lucide-react';
 
 interface InfoTooltipProps {
-  label: string;
-  content: string;
-  align?: 'left' | 'right';
+  readonly label: string;
+  readonly content: string;
+  readonly align?: 'left' | 'right';
 }
 
-export function InfoTooltip({ label, content, align = 'right' }: InfoTooltipProps) {
+/** Accessible hover/focus info tooltip button with ARIA description binding. */
+export function InfoTooltip({ label, content, align = 'right' }: InfoTooltipProps): ReactElement {
   const tooltipId = useId();
   const alignClass = align === 'left' ? 'left-0' : 'right-0';
 

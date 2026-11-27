@@ -1,14 +1,16 @@
+import type { ReactElement } from 'react';
 import type { ClarifyingQuestion } from '../types';
 
 interface IndoorQuestionsPanelProps {
-  questions: readonly ClarifyingQuestion[];
-  answers: Record<string, string>;
-  loadingMore: boolean;
-  moreError: string | null;
-  onSetAnswer: (questionId: string, value: string) => void;
-  onAskTwoMore: () => void;
+  readonly questions: readonly ClarifyingQuestion[];
+  readonly answers: Readonly<Record<string, string>>;
+  readonly loadingMore: boolean;
+  readonly moreError: string | null;
+  readonly onSetAnswer: (questionId: string, value: string) => void;
+  readonly onAskTwoMore: () => void;
 }
 
+/** Renders targeted indoor air-quality setup questions with chip selection. */
 export function IndoorQuestionsPanel({
   questions,
   answers,
@@ -16,7 +18,7 @@ export function IndoorQuestionsPanel({
   moreError,
   onSetAnswer,
   onAskTwoMore,
-}: IndoorQuestionsPanelProps) {
+}: IndoorQuestionsPanelProps): ReactElement {
   const answeredCount = questions.filter((q) => (answers[q.id] ?? '').trim().length > 0).length;
 
   return (

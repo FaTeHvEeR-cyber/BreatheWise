@@ -1,17 +1,23 @@
-import { useEffect, useRef } from 'react';
+import { type ReactElement, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import type { CpcbAqiResult, LiveAirQualityData } from '../types';
 import { CPCB_BREAKPOINTS, CPCB_CATEGORIES } from '../utils/cpcbAqi';
 import { formatReadingDateTime, formatRefreshDateTime } from '../utils/timeFormatting';
 
 interface MethodologyDialogProps {
-  open: boolean;
-  liveData: LiveAirQualityData | null;
-  cpcb: CpcbAqiResult | null;
-  onClose: () => void;
+  readonly open: boolean;
+  readonly liveData: LiveAirQualityData | null;
+  readonly cpcb: CpcbAqiResult | null;
+  readonly onClose: () => void;
 }
 
-export function MethodologyDialog({ open, liveData, cpcb, onClose }: MethodologyDialogProps) {
+/** Modal dialog detailing CPCB National AQI breakpoints and live pollutant audit data. */
+export function MethodologyDialog({
+  open,
+  liveData,
+  cpcb,
+  onClose,
+}: MethodologyDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 

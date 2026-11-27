@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
 import type { Schema } from '@google/genai';
 import type { z } from 'zod';
 import type {
@@ -22,13 +21,14 @@ import {
   IndoorProtocolModelSchema,
   SmogShockModelSchema,
 } from '../validation/aqiContracts.js';
-
+import { PER_ATTEMPT_TIMEOUT_MS } from '../config/constants.js';
 import {
-  DEFAULT_GEMINI_MODEL,
-  FALLBACK_GEMINI_MODEL,
-  PER_ATTEMPT_TIMEOUT_MS,
-  PLACEHOLDER_GEMINI_KEYS,
-} from '../config/constants.js';
+  getGeminiClient,
+  getModelChain,
+  isRetryableModelError,
+  parseModelJson,
+  withTimeout,
+} from './geminiTransport.js';
 
 const SYSTEM_INSTRUCTION = [
   'You are BreatheWise, a concise urban air-quality and low-emission advisor for Indian cities.',
@@ -44,70 +44,6 @@ const FAST_QUESTIONS_SYSTEM = [
   'If hasHouseholdProfile is false, ask general city resident questions (never assume a sample household).',
   'Be ultra-concise so output finishes fast.',
 ].join(' ');
-
-let cachedClient: GoogleGenAI | null = null;
-let cachedApiKey: string | null = null;
-
-function getModelChain(): readonly string[] {
-  const configured = (process.env.GEMINI_MODEL ?? '').trim();
-  const primary = configured || DEFAULT_GEMINI_MODEL;
-  return primary === FALLBACK_GEMINI_MODEL ? [primary] : [primary, FALLBACK_GEMINI_MODEL];
-}
-
-function getClient(): GoogleGenAI {
-  const apiKey = (process.env.GEMINI_API_KEY ?? '').trim();
-  if (!apiKey || PLACEHOLDER_GEMINI_KEYS.has(apiKey)) {
-    throw new Error('GEMINI_API_KEY is not configured.');
-  }
-  if (cachedClient && cachedApiKey === apiKey) {
-    return cachedClient;
-  }
-  cachedApiKey = apiKey;
-  cachedClient = new GoogleGenAI({ apiKey });
-  return cachedClient;
-}
-
-function isRetryableModelError(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err);
-  return (
-    msg.includes('503') ||
-    msg.includes('UNAVAILABLE') ||
-    msg.includes('429') ||
-    msg.includes('high demand') ||
-    msg.includes('no longer available') ||
-    msg.includes('not found') ||
-    msg.includes('404') ||
-    msg.includes('timed out') ||
-    msg.includes('500') ||
-    msg.includes('INTERNAL') ||
-    msg.includes('RESOURCE_EXHAUSTED')
-  );
-}
-
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(`Gemini request timed out after ${ms}ms`)), ms);
-    promise.then(
-      (val) => {
-        clearTimeout(timer);
-        resolve(val);
-      },
-      (err) => {
-        clearTimeout(timer);
-        reject(err);
-      },
-    );
-  });
-}
-
-function parseModelJson(rawText: string): unknown {
-  const cleaned = rawText
-    .trim()
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim();
-  return JSON.parse(cleaned) as unknown;
-}
 
 function buildClarifyingQuestionsPrompt(context: Record<string, unknown>): string {
   const count = typeof context.requestedCount === 'number' && context.requestedCount === 2 ? 2 : 3;
@@ -128,7 +64,7 @@ async function generateStructuredJson<T extends Record<string, unknown>>(
   contractSchema: z.ZodType<T>,
   systemInstruction: string = SYSTEM_INSTRUCTION,
 ): Promise<T & { source: string; sourceMode: 'gemini' }> {
-  const ai = getClient();
+  const ai = getGeminiClient();
   let lastError: unknown;
 
   for (const model of getModelChain()) {
@@ -169,7 +105,7 @@ export async function streamClarifyingQuestions(
   onChunk: (delta: string) => void,
   signal?: AbortSignal,
 ): Promise<ClarifyingQuestionsResponse> {
-  const ai = getClient();
+  const ai = getGeminiClient();
   const prompt = buildClarifyingQuestionsPrompt(context);
   let lastError: unknown;
 

@@ -29,6 +29,7 @@ export default tseslint.config(
       'prefer-const': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
       'max-lines-per-function': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
     },
   },
@@ -48,6 +49,7 @@ export default tseslint.config(
     files: ['**/*.test.{ts,tsx}', 'tests/**/*.ts'],
     rules: {
       'max-lines-per-function': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
     },
   },
 );

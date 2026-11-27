@@ -1,23 +1,25 @@
+import type { ReactElement } from 'react';
 import type { ClarifyingQuestionsResponse } from '../types';
 import type { AsyncSlot } from '../hooks/useAirQualityApp';
 
 interface ClarifyingIntakeSectionProps {
-  cityName: string;
-  cpcbAqi: number;
-  hasHouseholdProfile: boolean;
-  householdName: string;
-  questionsSlot: AsyncSlot<ClarifyingQuestionsResponse>;
-  loadingMoreQuestions: boolean;
-  answers: Record<string, string>;
-  additionalContext: string;
-  routineLoading: boolean;
-  onAskQuestions: () => void;
-  onAskMoreQuestions: () => void;
-  onSetAnswer: (questionId: string, value: string) => void;
-  onChangeAdditionalContext: (value: string) => void;
-  onGenerateRoutine: () => void;
+  readonly cityName: string;
+  readonly cpcbAqi: number;
+  readonly hasHouseholdProfile: boolean;
+  readonly householdName: string;
+  readonly questionsSlot: AsyncSlot<ClarifyingQuestionsResponse>;
+  readonly loadingMoreQuestions: boolean;
+  readonly answers: Readonly<Record<string, string>>;
+  readonly additionalContext: string;
+  readonly routineLoading: boolean;
+  readonly onAskQuestions: () => void;
+  readonly onAskMoreQuestions: () => void;
+  readonly onSetAnswer: (questionId: string, value: string) => void;
+  readonly onChangeAdditionalContext: (value: string) => void;
+  readonly onGenerateRoutine: () => void;
 }
 
+/** Displays AI-generated clarifying questions and free-text context before routine generation. */
 export function ClarifyingIntakeSection({
   cityName,
   cpcbAqi,
@@ -33,7 +35,7 @@ export function ClarifyingIntakeSection({
   onSetAnswer,
   onChangeAdditionalContext,
   onGenerateRoutine,
-}: ClarifyingIntakeSectionProps) {
+}: ClarifyingIntakeSectionProps): ReactElement {
   const answeredCount = Object.values(answers).filter((v) => v.trim().length > 0).length;
 
   return (

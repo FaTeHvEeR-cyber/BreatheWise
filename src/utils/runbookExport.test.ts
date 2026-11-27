@@ -1,7 +1,11 @@
-import { test } from 'vitest';
+import { test, vi } from 'vitest';
 import assert from 'node:assert/strict';
-import { assembleRunbookPayload, formatRunbookMarkdown } from './runbookExport';
-import { EVALUATOR_SAMPLE_PROFILES } from '../data/breatheWisePresets';
+import {
+  assembleRunbookPayload,
+  formatRunbookMarkdown,
+  triggerFileDownload,
+} from './runbookExport';
+import { EMPTY_HOUSEHOLD_PROFILE, EVALUATOR_SAMPLE_PROFILES } from '../data/breatheWisePresets';
 import { computeCpcbAqi } from './cpcbAqi';
 import { analyzeVentilationWindows } from './ventilationWindows';
 import { calculateHabitSwapImpact, calculateIndoorMitigationImpact } from './emissionsCalculator';
@@ -80,4 +84,66 @@ test('runbook export assembles deterministic payload and printable markdown', ()
   assert.ok(md.includes(`CPCB National AQI:** ${cpcb.aqi}`));
   assert.ok(md.includes('WhatsApp Family Advisory'));
   assert.ok(md.includes('Indoor Plant Note'));
+});
+
+test('runbook export handles null AI sections, missing windows, and file download trigger', () => {
+  const sample = EVALUATOR_SAMPLE_PROFILES[0];
+  const liveData: LiveAirQualityData = {
+    location: sample.city,
+    sourceName: 'Open-Meteo Air Quality API',
+    sourceUrl: 'https://air-quality-api.open-meteo.com/v1/air-quality',
+    readingIsoTime: '2026-11-26T08:00',
+    fetchedAtIso: '2026-11-26T08:05:00.000Z',
+    current: {
+      pm2_5: null,
+      pm10: null,
+      nitrogen_dioxide: null,
+      ozone: null,
+      sulphur_dioxide: null,
+      us_aqi: null,
+    },
+    hourly24h: [],
+  };
+
+  const emptyCpcb = computeCpcbAqi(liveData.current);
+  const payload = assembleRunbookPayload({
+    liveData,
+    cpcb: emptyCpcb,
+    profile: EMPTY_HOUSEHOLD_PROFILE,
+    protectionScorePct: 0,
+    ventilation: analyzeVentilationWindows([], 0),
+    indoorMitigation: calculateIndoorMitigationImpact(0, EMPTY_HOUSEHOLD_PROFILE),
+    swapTotals: calculateHabitSwapImpact([], 10, 0),
+    routine: null,
+    indoorProtocol: null,
+    communityBriefing: null,
+  });
+
+  assert.equal(payload.dominantPollutant, 'N/A');
+  assert.equal(payload.ventilationSummary.bestWindow, 'N/A');
+  assert.equal(payload.ventilationSummary.worstWindow, 'N/A');
+
+  const md = formatRunbookMarkdown(payload);
+  assert.ok(!md.includes('## 3. Daily Low-Emission Routine'));
+  assert.ok(!md.includes('## 4. Room-by-Room Indoor Protocol'));
+  assert.ok(!md.includes('## 5. Shareable Advisories'));
+
+  const click = vi.fn();
+  const remove = vi.fn();
+  const anchor = { href: '', download: '', click, remove };
+  const appendChild = vi.fn();
+  vi.stubGlobal('document', {
+    createElement: vi.fn(() => anchor),
+    body: { appendChild },
+  });
+  const createObjectURL = vi.fn(() => 'blob:breathewise-test');
+  const revokeObjectURL = vi.fn();
+  vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
+
+  triggerFileDownload('runbook.md', md, 'text/markdown');
+  assert.equal(anchor.download, 'runbook.md');
+  assert.equal(click.mock.calls.length, 1);
+  assert.equal(remove.mock.calls.length, 1);
+  assert.equal(revokeObjectURL.mock.calls.length, 1);
+  vi.unstubAllGlobals();
 });

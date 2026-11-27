@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import type { WorkspaceId } from '../types';
 import { WORKSPACE_TABS } from '../config/constants';
 import { useRovingTabs } from '../hooks/useRovingTabs';
@@ -5,12 +6,13 @@ import { useRovingTabs } from '../hooks/useRovingTabs';
 const TAB_IDS: readonly WorkspaceId[] = WORKSPACE_TABS.map((t) => t.id);
 
 interface HeaderProps {
-  activeTab: WorkspaceId;
-  onTabChange: (tab: WorkspaceId) => void;
-  onOpenAudit: () => void;
+  readonly activeTab: WorkspaceId;
+  readonly onTabChange: (tab: WorkspaceId) => void;
+  readonly onOpenAudit: () => void;
 }
 
-export function Header({ activeTab, onTabChange, onOpenAudit }: HeaderProps) {
+/** Top navigation header with W3C roving workspace tabs and CPCB audit trigger. */
+export function Header({ activeTab, onTabChange, onOpenAudit }: HeaderProps): ReactElement {
   const { registerTabRef, handleKeyDown } = useRovingTabs(TAB_IDS, onTabChange);
 
   return (

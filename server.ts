@@ -13,6 +13,18 @@ import { MAX_API_BODY_BYTES } from './src/validation/aqiContracts.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT) || 3000;
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+const PROD_CSP = [
+  "default-src 'self'",
+  "connect-src 'self' https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data:",
+  "script-src 'self'",
+].join('; ');
+
+const DEV_CSP = PROD_CSP.replace("script-src 'self'", "script-src 'self' 'unsafe-inline'");
 
 interface ExpressBodyError extends Error {
   status?: number;
@@ -21,11 +33,14 @@ interface ExpressBodyError extends Error {
 
 async function startServer(): Promise<void> {
   const app = express();
+  app.disable('x-powered-by');
   app.use((_req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Permissions-Policy', 'camera=(), microphone=()');
+    res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+    res.setHeader('Content-Security-Policy', IS_PROD ? PROD_CSP : DEV_CSP);
     next();
   });
   app.use(express.json({ limit: MAX_API_BODY_BYTES }));
@@ -67,7 +82,7 @@ async function startServer(): Promise<void> {
     (req, res) => void handleAiPostRequest(req, res, 'communityBriefing'),
   );
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (!IS_PROD) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -81,9 +96,16 @@ async function startServer(): Promise<void> {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`BreatheWise server listening on http://localhost:${PORT}`);
   });
+
+  const shutdown = (signal: string): void => {
+    console.log(`Received ${signal}, shutting down BreatheWise server...`);
+    server.close(() => process.exit(0));
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 startServer().catch((err: unknown) => {

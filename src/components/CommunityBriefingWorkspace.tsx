@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Check, Copy, Download } from 'lucide-react';
+import { useState, type ReactElement } from 'react';
+import { Check, Copy } from 'lucide-react';
 import type {
   CommunityBriefingResponse,
   CpcbAqiResult,
@@ -11,26 +11,23 @@ import type {
 import type { AsyncSlot } from '../hooks/useAirQualityApp';
 import type { HabitSwapTotals, IndoorMitigationMeter } from '../utils/emissionsCalculator';
 import type { VentilationAnalysis } from '../utils/ventilationWindows';
-import {
-  assembleRunbookPayload,
-  formatRunbookMarkdown,
-  triggerFileDownload,
-} from '../utils/runbookExport';
+import { RunbookExportSection } from './RunbookExportSection';
 
 interface CommunityBriefingWorkspaceProps {
-  liveData: LiveAirQualityData;
-  cpcb: CpcbAqiResult;
-  profile: HouseholdProfile;
-  ventilation: VentilationAnalysis;
-  indoorMeter: IndoorMitigationMeter;
-  swapTotals: HabitSwapTotals;
-  protectionScorePct: number;
-  routine: DailyRoutineResponse | null;
-  indoorProtocol: IndoorProtocolResponse | null;
-  communitySlot: AsyncSlot<CommunityBriefingResponse>;
-  onGenerateBriefing: () => void;
+  readonly liveData: LiveAirQualityData;
+  readonly cpcb: CpcbAqiResult;
+  readonly profile: HouseholdProfile;
+  readonly ventilation: VentilationAnalysis;
+  readonly indoorMeter: IndoorMitigationMeter;
+  readonly swapTotals: HabitSwapTotals;
+  readonly protectionScorePct: number;
+  readonly routine: DailyRoutineResponse | null;
+  readonly indoorProtocol: IndoorProtocolResponse | null;
+  readonly communitySlot: AsyncSlot<CommunityBriefingResponse>;
+  readonly onGenerateBriefing: () => void;
 }
 
+/** Workspace 5: shareable family, RWA, and carpool advisories plus runbook exports. */
 export default function CommunityBriefingWorkspace({
   liveData,
   cpcb,
@@ -43,11 +40,10 @@ export default function CommunityBriefingWorkspace({
   indoorProtocol,
   communitySlot,
   onGenerateBriefing,
-}: CommunityBriefingWorkspaceProps) {
+}: CommunityBriefingWorkspaceProps): ReactElement {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [exportNote, setExportNote] = useState<string | null>(null);
 
-  const handleCopy = async (key: string, text: string) => {
+  const handleCopy = async (key: string, text: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedKey(key);
@@ -57,41 +53,6 @@ export default function CommunityBriefingWorkspace({
     }
   };
 
-  const buildPayload = () =>
-    assembleRunbookPayload({
-      liveData,
-      cpcb,
-      profile,
-      protectionScorePct,
-      ventilation,
-      indoorMitigation: indoorMeter,
-      swapTotals,
-      routine,
-      indoorProtocol,
-      communityBriefing: communitySlot.data,
-    });
-
-  const handleDownloadJson = () => {
-    const payload = buildPayload();
-    const slug = liveData.location.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    triggerFileDownload(
-      `breathewise-runbook-${slug}.json`,
-      JSON.stringify(payload, null, 2),
-      'application/json',
-    );
-    setExportNote(
-      `Exported breathewise-runbook-${slug}.json with live Open-Meteo timestamp ${liveData.readingIsoTime}.`,
-    );
-  };
-
-  const handleDownloadMarkdown = () => {
-    const payload = buildPayload();
-    const md = formatRunbookMarkdown(payload);
-    const slug = liveData.location.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    triggerFileDownload(`breathewise-runbook-${slug}.md`, md, 'text/markdown;charset=utf-8');
-    setExportNote(`Exported printable Markdown runbook (breathewise-runbook-${slug}.md).`);
-  };
-
   const shareCards = communitySlot.data
     ? [
         {
@@ -99,7 +60,11 @@ export default function CommunityBriefingWorkspace({
           title: 'WhatsApp Family Group Advisory',
           text: communitySlot.data.whatsappAdvisory,
         },
-        { id: 'rwa', title: 'RWA / Apartment Society Notice', text: communitySlot.data.rwaNotice },
+        {
+          id: 'rwa',
+          title: 'RWA / Apartment Society Notice',
+          text: communitySlot.data.rwaNotice,
+        },
         {
           id: 'carpool',
           title: 'School / Office Carpool Pitch',
@@ -188,7 +153,7 @@ export default function CommunityBriefingWorkspace({
                         <h3 className="text-sm font-semibold text-slate-900">{card.title}</h3>
                         <button
                           type="button"
-                          onClick={() => handleCopy(card.id, card.text)}
+                          onClick={() => void handleCopy(card.id, card.text)}
                           aria-label={`Copy ${card.title}`}
                           className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-800 whitespace-nowrap transition-colors hover:bg-slate-50"
                         >
@@ -217,45 +182,18 @@ export default function CommunityBriefingWorkspace({
         )}
       </section>
 
-      <section
-        aria-label="Master Clean-Air Runbook export"
-        className="border border-slate-200 bg-white p-6"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">
-              Master Clean-Air Runbook Export
-            </h2>
-            <p className="mt-1 text-xs text-slate-600">
-              Downloads your live {liveData.location.name} CPCB AQI audit, ventilation window,
-              indoor mitigation meter, swap savings, and generated plans.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              type="button"
-              onClick={handleDownloadJson}
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 whitespace-nowrap transition-colors hover:bg-slate-50"
-            >
-              <Download aria-hidden="true" className="h-4 w-4" />
-              Export JSON
-            </button>
-            <button
-              type="button"
-              onClick={handleDownloadMarkdown}
-              className="inline-flex items-center gap-1.5 rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white whitespace-nowrap transition-colors hover:bg-teal-900"
-            >
-              <Download aria-hidden="true" className="h-4 w-4" />
-              Export Printable Markdown
-            </button>
-          </div>
-        </div>
-        {exportNote && (
-          <p role="status" className="mt-3 font-mono text-xs text-teal-900">
-            {exportNote}
-          </p>
-        )}
-      </section>
+      <RunbookExportSection
+        liveData={liveData}
+        cpcb={cpcb}
+        profile={profile}
+        ventilation={ventilation}
+        indoorMeter={indoorMeter}
+        swapTotals={swapTotals}
+        protectionScorePct={protectionScorePct}
+        routine={routine}
+        indoorProtocol={indoorProtocol}
+        communityBriefing={communitySlot.data}
+      />
     </div>
   );
 }

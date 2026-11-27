@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import type { HouseholdProfile } from '../types';
 import { MAX_COMMUTE_KM, MAX_ROOMS } from '../data/breatheWisePresets';
 import { clampActiveRooms, finalizeIntegerInput } from '../utils/numericInput';
 import { HouseholdProfileFields } from './HouseholdProfileFields';
 
 interface CustomHouseholdSectionProps {
-  profile: HouseholdProfile;
-  hasHouseholdProfile: boolean;
-  onSyncSetup: (patch: Partial<HouseholdProfile>) => void;
-  onSaveCustomProfile: (custom: HouseholdProfile) => void;
-  onClearHousehold: () => void;
+  readonly profile: HouseholdProfile;
+  readonly hasHouseholdProfile: boolean;
+  readonly onSyncSetup: (patch: Partial<HouseholdProfile>) => void;
+  readonly onSaveCustomProfile: (custom: HouseholdProfile) => void;
+  readonly onClearHousehold: () => void;
 }
 
 /** Custom household profile builder synced with the Indoor Lab and Routine workspaces. */
@@ -19,7 +19,7 @@ export function CustomHouseholdSection({
   onSyncSetup,
   onSaveCustomProfile,
   onClearHousehold,
-}: CustomHouseholdSectionProps) {
+}: CustomHouseholdSectionProps): ReactElement {
   const [draft, setDraft] = useState<HouseholdProfile>(profile);
   const [commuteInput, setCommuteInput] = useState<string>(String(profile.commuteDistanceKm));
   const [roomsInput, setRoomsInput] = useState<string>(String(profile.roomCount));

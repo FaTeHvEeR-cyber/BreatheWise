@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import type { CommuteMode, CookingFuel, HouseholdProfile } from '../types';
 import {
   COMMUTE_OPTIONS,
@@ -8,13 +9,13 @@ import {
 import { IntegerInputField } from './IntegerInputField';
 
 interface HouseholdProfileFieldsProps {
-  draft: HouseholdProfile;
-  commuteInput: string;
-  roomsInput: string;
-  onChangeDraft: (patch: Partial<HouseholdProfile>) => void;
-  onSyncSetup: (patch: Partial<HouseholdProfile>) => void;
-  onChangeCommuteText: (val: string) => void;
-  onChangeRoomsText: (val: string) => void;
+  readonly draft: HouseholdProfile;
+  readonly commuteInput: string;
+  readonly roomsInput: string;
+  readonly onChangeDraft: (patch: Partial<HouseholdProfile>) => void;
+  readonly onSyncSetup: (patch: Partial<HouseholdProfile>) => void;
+  readonly onChangeCommuteText: (val: string) => void;
+  readonly onChangeRoomsText: (val: string) => void;
 }
 
 /** Text, commute, fuel, and room inputs for the custom household profile form. */
@@ -26,7 +27,7 @@ export function HouseholdProfileFields({
   onSyncSetup,
   onChangeCommuteText,
   onChangeRoomsText,
-}: HouseholdProfileFieldsProps) {
+}: HouseholdProfileFieldsProps): ReactElement {
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import type {
   AppliedShockPatch,
   CommunityBriefingResponse,
@@ -20,23 +21,23 @@ import {
   buildFallbackShockStrategies,
 } from '../utils/fallbackAdvisor';
 import { upsertAppliedShockPatch } from '../utils/indoorQuestions';
-import { EMPTY_SLOT, type AsyncSlot } from './useIntakeQuestionsAi';
+import { EMPTY_SLOT, type AsyncSlot, type UseShockAndCommunityReturn } from './hookTypes';
 
 interface UseShockAndCommunityParams {
-  liveData: LiveAirQualityData | null;
-  cpcb: CpcbAqiResult | null;
-  ventilation: VentilationAnalysis | null;
-  profile: HouseholdProfile;
-  hasHouseholdProfile: boolean;
-  swapTotals: HabitSwapTotals;
-  routineHeadline: string | null;
-  setRoutineSlot: React.Dispatch<React.SetStateAction<AsyncSlot<DailyRoutineResponse>>>;
-  runVersionedSlot: <T>(
+  readonly liveData: LiveAirQualityData | null;
+  readonly cpcb: CpcbAqiResult | null;
+  readonly ventilation: VentilationAnalysis | null;
+  readonly profile: HouseholdProfile;
+  readonly hasHouseholdProfile: boolean;
+  readonly swapTotals: HabitSwapTotals;
+  readonly routineHeadline: string | null;
+  readonly setRoutineSlot: Dispatch<SetStateAction<AsyncSlot<DailyRoutineResponse>>>;
+  readonly runVersionedSlot: <T>(
     setter: (next: AsyncSlot<T>) => void,
     task: () => Promise<T>,
     fallback: () => T,
   ) => Promise<void>;
-  onNavigateWorkspace: (ws: WorkspaceId) => void;
+  readonly onNavigateWorkspace: (ws: WorkspaceId) => void;
 }
 
 /** Manages smog shock simulations, routine patching, and community briefings. */
@@ -51,7 +52,7 @@ export function useShockAndCommunityAi({
   setRoutineSlot,
   runVersionedSlot,
   onNavigateWorkspace,
-}: UseShockAndCommunityParams) {
+}: UseShockAndCommunityParams): UseShockAndCommunityReturn {
   const [appliedShockNote, setAppliedShockNote] = useState<string | null>(null);
   const [appliedShockPatches, setAppliedShockPatches] = useState<AppliedShockPatch[]>([]);
   const [shockSlot, setShockSlot] = useState<AsyncSlot<SmogShockResponse>>({ ...EMPTY_SLOT });

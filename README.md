@@ -2,7 +2,7 @@
 
 **Hack2skill PromptWars Challenge 06 ("Build the Urban Air Quality Assistant")**
 
-BreatheWise is an urban air-quality intelligence and low-emission household advisor built for Indian cities. It pairs real-time **Open-Meteo** atmospheric telemetry and deterministic **Indian CPCB National AQI (0–500)** calculations with **Gemini 2.5 Flash** (`@google/genai`) structured synthesis—plus full deterministic fallbacks when offline or rate-limited—so households never receive hallucinated pollutant numbers.
+BreatheWise is an urban air-quality intelligence and low-emission household advisor built for Indian cities. It pairs real-time **Open-Meteo** atmospheric telemetry and deterministic **Indian CPCB National AQI (0–500)** calculations with **Gemini 3.8 Flash** (`@google/genai`) structured synthesis—plus full deterministic fallbacks when offline or rate-limited—so households never receive hallucinated pollutant numbers.
 
 ---
 
@@ -14,27 +14,19 @@ BreatheWise is an urban air-quality intelligence and low-emission household advi
 
 ---
 
-## 2. Live Data Integrity & CPCB Standard
+## 2. System Architecture & Serverless Security Model
 
-- **Live Providers:** [Open-Meteo Air Quality API](https://air-quality-api.open-meteo.com/v1/air-quality) and [Open-Meteo Geocoding API](https://geocoding-api.open-meteo.com/v1/search) (auto-refreshes every 5 minutes and on stale-tab resume, with `cache: 'no-store'`).
-- **Official Indian CPCB National AQI (0–500):** Piecewise linear interpolation across `PM2.5`, `PM10`, `NO₂`, `O₃`, and `SO₂` (`src/utils/cpcbAqi.ts`), selecting the highest pollutant sub-index as overall AQI and reporting the dominant pollutant.
-- **WHO 2021 Guideline Ratios:** Displays real-time multiples against WHO 24-hour/8-hour thresholds (`15`, `45`, `25`, `100`, `40` µg/m³) and includes an interactive **CPCB Audit** modal (`MethodologyDialog`) showing the live formula and breakpoint table.
-
----
-
-## 3. Architecture & Serverless Security Model
-
-```text
-React 19 + Vite SPA (src/)
-   ├── Direct Live Telemetry ──> Open-Meteo Air Quality & Geocoding APIs
-   └── AI Synthesis Requests ──> Vercel Serverless (/api/*) or Express (server.ts)
-                                    ├── HTTP Guards: POST-only (405), JSON-only (415), 128 KB max (413), Cache-Control: no-store
-                                    ├── Runtime Trust Boundary: Zod Request & Response Schemas (src/validation/aqiContracts.ts)
-                                    ├── @google/genai: gemini-3.8-flash (fallback: gemini-3.1-flash-lite, 20s timeout)
-                                    └── Safe Error Boundary (no key/stack leakage) + Client Deterministic Fallback
+```mermaid
+flowchart LR
+  UI["React 19 + Vite SPA (src/)"] -->|"Live Fetch (cache: no-store)"| OM["Open-Meteo Air Quality & Geocoding APIs"]
+  UI -->|"POST /api/gemini/* + SSE"| API["Vercel Serverless (api/) / Express (server.ts)"]
+  API -->|"HSTS, CSP, 405/415/413, 30 req/min 429, Zod"| CTRL["Shared AI Controller (aiController.ts)"]
+  CTRL -->|"Structured JSON + 20s Timeout"| GEM["Gemini 3.8 Flash -> 3.1 Flash Lite"]
+  API -.->|"Offline / Rate-Limit Recovery"| FB["Client Deterministic Fallback"]
 ```
 
-- **Shared Controller (`src/services/aiController.ts`):** Both `server.ts` (local Express + Vite middleware) and `api/**/*.ts` (Vercel Serverless Functions) execute the exact same Zod-validated request/response pipeline.
+- **Shared Controller (`src/services/aiController.ts`):** Both `server.ts` (Express + Vite SSR/static host) and `api/**/*.ts` (Vercel Node 22 ESM Serverless Functions) run the exact same HTTP method/content-type/128 KB guards, per-IP sliding-window rate limiter (`30` req/min -> HTTP `429` + `Retry-After`), and Zod trust boundaries (`src/validation/aqiContracts.ts`).
+- **Transport Hardening (`vercel.json` & `server.ts`):** Sends `Strict-Transport-Security`, restrictive `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and `Permissions-Policy`.
 - **API Endpoints:**
   - `GET /api/health`
   - `POST /api/gemini/questions` & `POST /api/gemini/questions/stream` (SSE incremental streaming)
@@ -45,22 +37,23 @@ React 19 + Vite SPA (src/)
 
 ---
 
-## 4. Five Workspaces & 1-Click Evaluator Profiles
+## 3. Five Workspaces & 1-Click Evaluator Profiles
 
-1. **Intake (`ProfileIntakeWorkspace`):** All-India city search + quick city chips (`Delhi`, `Noida`, `Chandigarh`, `Mumbai`, `Kolkata`, `Bengaluru`), CPCB AQI meter, 4 one-click sample profiles (`Delhi NCR Working Commuter`, `Noida Young Family`, `Chandigarh / Jalandhar College Student`, `Mumbai Coastal Apartment Household`), custom household builder, and streaming clarifying intake.
+1. **Intake (`ProfileIntakeWorkspace`):** All-India city search + quick city chips (`Delhi`, `Noida`, `Chandigarh`, `Mumbai`, `Kolkata`, `Bengaluru`), CPCB AQI meter, WHO 2021 pollutant ratios, 4 one-click sample profiles, custom household builder, and streaming clarifying intake.
 2. **Routine (`DailyRoutineWorkspace`):** 24-hour Recharts PM2.5 trajectory chart with shaded safest 3-hour cross-ventilation band, peak smog danger hours, and interactive 4-block checklist (`Morning`, `Midday`, `Evening`, `Night`) updating the live **Protection Score (%)**.
 3. **Indoor Lab (`IndoorLabWorkspace`):** Synced HEPA vs. zero-purifier DIY controls, cooking fuel & exhaust toggles, active room slider, deterministic indoor PM2.5 reduction meter, targeted indoor questions, and room-by-room playbooks (`Living Room`, `Bedroom / Nursery`, `Kitchen`) with a scientific note on indoor plants.
 4. **Simulator (`AlternativesSimulatorWorkspace`):** Low-emission habit swap engine calculating weekly/annual CO₂ avoided, diminishing-returns PM2.5 exposure reduction, and monthly ₹ savings, plus the **"What-If" Sudden Smog Spike Simulator** that patches active routine blocks in one click.
-5. **Community (`CommunityBriefingWorkspace`):** Copyable WhatsApp family advisory, RWA/apartment notice, and carpool pitch, plus one-click **JSON** and **Printable Markdown** Master Clean-Air Runbook exports.
+5. **Community (`CommunityBriefingWorkspace`):** Copyable WhatsApp family advisory, RWA/apartment notice, and carpool pitch, plus one-click **JSON** and **Printable Markdown** Master Clean-Air Runbook exports (`RunbookExportSection`).
 
 ---
 
-## 5. Modularity, Local Setup, Testing & Deployment
+## 4. Code Quality & Testing
 
-- **Modularity & Type Safety:** Strict TypeScript (`"strict": true`, `"noUnusedLocals": true`, `"noUnusedParameters": true`), zero `any` types, and every source file kept strictly under **250 lines**.
-- **Accessibility:** Semantic HTML5 landmarks (`<header>`, `<nav>` with `role="tablist"`, `<main id="main-content">` with `role="tabpanel"`), skip-to-content link, roving keyboard tabs, native `<dialog>` with Escape/focus restoration, and WCAG AA `>=4.5:1` contrast.
+- **Strict Static Analysis:** ESLint 9 flat config (`npx eslint . --max-warnings=0`, `@typescript-eslint/no-explicit-any: error`, `@typescript-eslint/explicit-module-boundary-types: error`), Prettier formatting enforcement, TypeScript strict mode (`noUnusedLocals`, `noUnusedParameters`), `readonly` React prop contracts, and every file kept strictly under **250 lines**.
+- **Accessibility & Resilience:** React `<ErrorBoundary>` + `<Suspense>` isolation, semantic HTML5 landmarks (`<header>`, `<nav>`, `<main id="main-content">`), skip link, WAI-ARIA roving keyboard tabs (`ArrowRight`/`ArrowLeft`/`Home`/`End`), native `<dialog>` with Escape close & focus restoration, and WCAG AA contrast.
+- **Automated Test Suite (60+ Tests):** Covers CPCB piecewise AQI interpolation, Open-Meteo telemetry, emissions math, SSE stream parsing, API security guards (`405`/`415`/`413`/`429`), secret-free error redaction, and accessible UI components under enforced V8 coverage thresholds (`95%` statements/lines/functions, `80%` branches).
 
-### Local Setup (Node 22.x)
+### Local Setup (Node 22.x) & Verification
 
 ```bash
 npm ci
@@ -69,14 +62,12 @@ cp .env.example .env
 npm run dev
 ```
 
-### Verification & Coverage
-
 ```bash
-npm run check           # Runs tsc --noEmit, vitest run, and vite build
-npm run test:coverage   # Runs Vitest with V8 coverage thresholds (90% stmts/lines/funcs, 75% branches)
+npm run check           # ESLint (--max-warnings=0 via eslint), tsc --noEmit, Prettier check, Vitest, Vite build
+npm run test:coverage   # Enforces 95% statements/lines/functions and 80% branches
 ```
 
 ### Vercel Deployment
 
-- `vercel.json` sets `maxDuration: 30` for `api/**/*.ts` and rewrites `/api/*` to serverless functions with `/index.html` SPA fallback.
-- Configure `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`) in Vercel Project Environment Variables and deploy with `vercel --prod`.
+- `vercel.json` configures `maxDuration: 30` for `api/**/*.ts`, production security headers, `/api/*` routing, and `/index.html` SPA fallback.
+- Configure `GEMINI_API_KEY` (and optionally `GEMINI_MODEL=gemini-3.8-flash`) in Vercel Project Environment Variables and deploy with `vercel --prod`.

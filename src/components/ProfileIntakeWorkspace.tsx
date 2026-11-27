@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import type {
   ClarifyingQuestionsResponse,
   CpcbAqiResult,
@@ -13,33 +14,33 @@ import { CustomHouseholdSection } from './CustomHouseholdSection';
 import { ClarifyingIntakeSection } from './ClarifyingIntakeSection';
 
 interface ProfileIntakeWorkspaceProps {
-  location: CitySearchSectionProps['location'];
-  activePresetId: string | null;
-  hasHouseholdProfile: boolean;
-  liveData: LiveAirQualityData;
-  cpcb: CpcbAqiResult;
-  profile: HouseholdProfile;
-  questionsSlot: AsyncSlot<ClarifyingQuestionsResponse>;
-  loadingMoreQuestions: boolean;
-  answers: Record<string, string>;
-  additionalContext: string;
-  routineLoading: boolean;
-  onSelectCity: (city: CitySearchSectionProps['location']) => void;
-  onSelectSampleProfile: (preset: (typeof EVALUATOR_SAMPLE_PROFILES)[number]) => void;
-  onSyncSetup: (patch: Partial<HouseholdProfile>) => void;
-  onSaveCustomProfile: (custom: HouseholdProfile) => void;
-  onClearHousehold: () => void;
-  onAskQuestions: () => void;
-  onAskMoreQuestions: () => void;
-  onSetAnswer: (questionId: string, value: string) => void;
-  onChangeAdditionalContext: (value: string) => void;
-  onGenerateAndGoToRoutine: () => void;
+  readonly location: CitySearchSectionProps['location'];
+  readonly activePresetId: string | null;
+  readonly hasHouseholdProfile: boolean;
+  readonly liveData: LiveAirQualityData;
+  readonly cpcb: CpcbAqiResult;
+  readonly profile: HouseholdProfile;
+  readonly questionsSlot: AsyncSlot<ClarifyingQuestionsResponse>;
+  readonly loadingMoreQuestions: boolean;
+  readonly answers: Readonly<Record<string, string>>;
+  readonly additionalContext: string;
+  readonly routineLoading: boolean;
+  readonly onSelectCity: (city: CitySearchSectionProps['location']) => void;
+  readonly onSelectSampleProfile: (preset: (typeof EVALUATOR_SAMPLE_PROFILES)[number]) => void;
+  readonly onSyncSetup: (patch: Partial<HouseholdProfile>) => void;
+  readonly onSaveCustomProfile: (custom: HouseholdProfile) => void;
+  readonly onClearHousehold: () => void;
+  readonly onAskQuestions: () => void;
+  readonly onAskMoreQuestions: () => void;
+  readonly onSetAnswer: (questionId: string, value: string) => void;
+  readonly onChangeAdditionalContext: (value: string) => void;
+  readonly onGenerateAndGoToRoutine: () => void;
 }
 
 type CitySearchSectionProps = Parameters<typeof CitySearchSection>[0];
 
 /** Workspace 1: live city AQI telemetry, 1-click sample profiles, and intake. */
-export default function ProfileIntakeWorkspace(props: ProfileIntakeWorkspaceProps) {
+export default function ProfileIntakeWorkspace(props: ProfileIntakeWorkspaceProps): ReactElement {
   const {
     location,
     activePresetId,

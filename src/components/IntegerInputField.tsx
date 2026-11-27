@@ -1,19 +1,21 @@
+import type { ReactElement } from 'react';
 import { finalizeIntegerInput, sanitizeIntegerInput } from '../utils/numericInput';
 import { InfoTooltip } from './InfoTooltip';
 
 interface IntegerInputFieldProps {
-  id: string;
-  label: string;
-  value: string;
-  min: number;
-  max: number;
-  fallback: number;
-  infoTooltip?: string;
-  infoTooltipAlign?: 'left' | 'right';
-  onChangeText: (nextText: string) => void;
-  onCommitNumber: (nextValue: number) => void;
+  readonly id: string;
+  readonly label: string;
+  readonly value: string;
+  readonly min: number;
+  readonly max: number;
+  readonly fallback: number;
+  readonly infoTooltip?: string;
+  readonly infoTooltipAlign?: 'left' | 'right';
+  readonly onChangeText: (nextText: string) => void;
+  readonly onCommitNumber: (nextValue: number) => void;
 }
 
+/** Clamped numeric text input field with optional inline methodology tooltip. */
 export function IntegerInputField({
   id,
   label,
@@ -25,7 +27,7 @@ export function IntegerInputField({
   infoTooltipAlign = 'right',
   onChangeText,
   onCommitNumber,
-}: IntegerInputFieldProps) {
+}: IntegerInputFieldProps): ReactElement {
   return (
     <div>
       <div className="flex items-center gap-1.5">

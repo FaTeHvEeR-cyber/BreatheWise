@@ -45,3 +45,21 @@ test('shouldAutoRefresh triggers only once 5 minutes have elapsed since last fet
   assert.equal(shouldAutoRefresh(t0, t0 + 300_000), true);
   assert.equal(shouldAutoRefresh(t0, t0 + 600_000), true);
 });
+
+test('timeFormatting falls back cleanly on unparseable strings, invalid dates, and bad timezones', () => {
+  assert.equal(formatHour12('not-a-time'), 'not-a-time');
+  assert.deepEqual(formatReadingDateTime('2026/invalid'), {
+    dateLabel: '2026/invalid',
+    timeLabel: '',
+    combined: '2026/invalid',
+  });
+  assert.deepEqual(formatRefreshDateTime('not-a-date', 'Asia/Kolkata'), {
+    dateLabel: 'not-a-date',
+    timeLabel: '',
+    combined: 'not-a-date',
+  });
+
+  const badTz = formatRefreshDateTime('2026-11-27T08:15:00Z', 'Mars/Olympus');
+  assert.equal(badTz.dateLabel, '27 Nov 2026');
+  assert.equal(badTz.timeLabel, '8:15 AM');
+});

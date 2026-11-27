@@ -13,11 +13,13 @@ import {
   mergeUniqueQuestions,
 } from '../utils/indoorQuestions';
 
+import type { UseIndoorQuestionsReturn } from './hookTypes';
+
 interface UseIndoorQuestionsParams {
-  liveData: LiveAirQualityData | null;
-  cpcb: CpcbAqiResult | null;
-  profile: HouseholdProfile;
-  hasHouseholdProfile: boolean;
+  readonly liveData: LiveAirQualityData | null;
+  readonly cpcb: CpcbAqiResult | null;
+  readonly profile: HouseholdProfile;
+  readonly hasHouseholdProfile: boolean;
 }
 
 /** Manages tailored indoor air-quality setup questions and "+2 more" expansion. */
@@ -26,7 +28,7 @@ export function useIndoorQuestions({
   cpcb,
   profile,
   hasHouseholdProfile,
-}: UseIndoorQuestionsParams) {
+}: UseIndoorQuestionsParams): UseIndoorQuestionsReturn {
   const baseQuestions = useMemo(
     () => buildInitialIndoorQuestions(profile, hasHouseholdProfile),
     [profile, hasHouseholdProfile],

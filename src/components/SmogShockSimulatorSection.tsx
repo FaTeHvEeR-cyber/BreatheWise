@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { Check } from 'lucide-react';
 import type {
   AppliedShockPatch,
@@ -12,14 +12,15 @@ import { SMOG_SHOCK_PRESETS } from '../data/breatheWisePresets';
 import { isShockStrategyApplied } from '../utils/indoorQuestions';
 
 interface SmogShockSimulatorSectionProps {
-  liveData: LiveAirQualityData;
-  cpcb: CpcbAqiResult;
-  shockSlot: AsyncSlot<SmogShockResponse>;
-  appliedShockPatches: readonly AppliedShockPatch[];
-  onRunSmogShock: (scenario: string) => void;
-  onApplyShockStrategy: (strategy: SmogShockStrategy) => void;
+  readonly liveData: LiveAirQualityData;
+  readonly cpcb: CpcbAqiResult;
+  readonly shockSlot: AsyncSlot<SmogShockResponse>;
+  readonly appliedShockPatches: readonly AppliedShockPatch[];
+  readonly onRunSmogShock: (scenario: string) => void;
+  readonly onApplyShockStrategy: (strategy: SmogShockStrategy) => void;
 }
 
+/** Interactive GRAP-stage smog shock simulator with one-click routine strategy patches. */
 export function SmogShockSimulatorSection({
   liveData,
   cpcb,
@@ -27,7 +28,7 @@ export function SmogShockSimulatorSection({
   appliedShockPatches,
   onRunSmogShock,
   onApplyShockStrategy,
-}: SmogShockSimulatorSectionProps) {
+}: SmogShockSimulatorSectionProps): ReactElement {
   const [customScenario, setCustomScenario] = useState<string>('');
   const [selectedScenario, setSelectedScenario] = useState<string>('');
 

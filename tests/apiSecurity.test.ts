@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetRateLimiter } from '../src/services/rateLimiter';
 import { createMockRes, VALID_QUESTIONS_REQ } from './apiTestUtils';
 
 const mockGenerateContent = vi.fn();
@@ -20,6 +21,7 @@ import routineHandler from '../api/gemini/routine';
 describe('API HTTP security guards, limits, and secret-free error responses', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetRateLimiter();
     process.env.GEMINI_API_KEY = 'test-secret-api-key-12345';
   });
 
@@ -111,7 +113,9 @@ describe('API HTTP security guards, limits, and secret-free error responses', ()
 
     process.env.GEMINI_API_KEY = 'SUPER_SECRET_KEY_XYZ_987';
     mockGenerateContent.mockRejectedValueOnce(
-      new Error('Fatal error using SUPER_SECRET_KEY_XYZ_987 at /secret/stack'),
+      new Error(
+        'Fatal error using SUPER_SECRET_KEY_XYZ_987&key=AIzaSySecretToken99 at /secret/stack',
+      ),
     );
     const secretRes = createMockRes();
     await questionsHandler(
@@ -126,7 +130,112 @@ describe('API HTTP security guards, limits, and secret-free error responses', ()
     expect(JSON.stringify(secretRes.jsonBody)).not.toContain('SUPER_SECRET_KEY_XYZ_987');
     expect(JSON.stringify(secretRes.jsonBody)).not.toContain('/secret/stack');
     expect(errSpy).toHaveBeenCalled();
-    expect(errSpy.mock.calls.flat().join(' ')).not.toContain('SUPER_SECRET_KEY_XYZ_987');
+    const logged = errSpy.mock.calls.flat().join(' ');
+    expect(logged).not.toContain('SUPER_SECRET_KEY_XYZ_987');
+    expect(logged).not.toContain('AIzaSySecretToken99');
     errSpy.mockRestore();
+  });
+
+  it('enforces per-IP 30/min sliding-window rate limit with 429 and Retry-After', async () => {
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify({
+        airContextNote: 'Delhi AQI 280.',
+        questions: [
+          { id: 'q1', question: 'Metro?', reason: 'Clean.', quickOptions: ['Y', 'N', 'W'] },
+        ],
+      }),
+    });
+
+    for (let i = 0; i < 30; i += 1) {
+      const okRes = createMockRes();
+      await questionsHandler(
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-forwarded-for': '203.0.113.9, 10.0.0.1',
+          },
+          body: VALID_QUESTIONS_REQ,
+        },
+        okRes,
+      );
+      expect(okRes.statusCode).toBe(200);
+    }
+
+    const throttledRes = createMockRes();
+    await questionsHandler(
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-forwarded-for': '203.0.113.9' },
+        body: VALID_QUESTIONS_REQ,
+      },
+      throttledRes,
+    );
+    expect(throttledRes.statusCode).toBe(429);
+    expect(Number(throttledRes.headers['retry-after'])).toBeGreaterThanOrEqual(1);
+    expect(throttledRes.headers['cache-control']).toBe('no-store');
+
+    const distinctIpRes = createMockRes();
+    await questionsHandler(
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-real-ip': '198.51.100.42' },
+        body: VALID_QUESTIONS_REQ,
+      },
+      distinctIpRes,
+    );
+    expect(distinctIpRes.statusCode).toBe(200);
+  });
+
+  it('handles streamed valid JSON, empty stream, string size cap, and array body errors', async () => {
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify({
+        airContextNote: 'Delhi AQI 280.',
+        questions: [
+          { id: 'q1', question: 'Metro?', reason: 'Clean.', quickOptions: ['Y', 'N', 'W'] },
+        ],
+      }),
+    });
+
+    const validStreamReq = Object.assign(new EventEmitter(), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      socket: { remoteAddress: '127.0.0.9' },
+    });
+    const okStreamRes = createMockRes();
+    const p1 = questionsHandler(validStreamReq, okStreamRes);
+    validStreamReq.emit('data', Buffer.from(JSON.stringify(VALID_QUESTIONS_REQ)));
+    validStreamReq.emit('end');
+    await p1;
+    expect(okStreamRes.statusCode).toBe(200);
+
+    const emptyStreamReq = Object.assign(new EventEmitter(), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    });
+    const emptyRes = createMockRes();
+    const p2 = questionsHandler(emptyStreamReq, emptyRes);
+    emptyStreamReq.emit('data', '   ');
+    emptyStreamReq.emit('end');
+    await p2;
+    expect(emptyRes.statusCode).toBe(400);
+
+    const oversizedStrRes = createMockRes();
+    await questionsHandler(
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: 'a'.repeat(130 * 1024),
+      },
+      oversizedStrRes,
+    );
+    expect(oversizedStrRes.statusCode).toBe(413);
+
+    const arrayBodyRes = createMockRes();
+    await questionsHandler(
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: [] },
+      arrayBodyRes,
+    );
+    expect(arrayBodyRes.statusCode).toBe(400);
   });
 });

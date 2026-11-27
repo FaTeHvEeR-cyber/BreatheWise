@@ -11,13 +11,9 @@ import { buildClarifyingQuestionsPayload } from '../utils/aiPayloads';
 import { buildFallbackQuestions } from '../utils/fallbackAdvisor';
 import { buildExtraFallbackQuestions, mergeUniqueQuestions } from '../utils/indoorQuestions';
 
-export interface AsyncSlot<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-}
+import { EMPTY_SLOT, type AsyncSlot, type UseIntakeQuestionsReturn } from './hookTypes';
 
-export const EMPTY_SLOT = { data: null, loading: false, error: null } as const;
+export { EMPTY_SLOT, type AsyncSlot };
 
 function isAbortError(err: unknown): boolean {
   return err instanceof DOMException
@@ -26,12 +22,12 @@ function isAbortError(err: unknown): boolean {
 }
 
 interface UseIntakeQuestionsParams {
-  liveData: LiveAirQualityData | null;
-  cpcb: CpcbAqiResult | null;
-  profile: HouseholdProfile;
-  hasHouseholdProfile: boolean;
-  trimmedNotes: string | null;
-  ctxVersionRef: RefObject<number>;
+  readonly liveData: LiveAirQualityData | null;
+  readonly cpcb: CpcbAqiResult | null;
+  readonly profile: HouseholdProfile;
+  readonly hasHouseholdProfile: boolean;
+  readonly trimmedNotes: string | null;
+  readonly ctxVersionRef: RefObject<number>;
 }
 
 /** Manages streaming intake clarifying questions, quick answers, and "+2 more" expansion. */
@@ -42,7 +38,7 @@ export function useIntakeQuestionsAi({
   hasHouseholdProfile,
   trimmedNotes,
   ctxVersionRef,
-}: UseIntakeQuestionsParams) {
+}: UseIntakeQuestionsParams): UseIntakeQuestionsReturn {
   const [questionsSlot, setQuestionsSlot] = useState<AsyncSlot<ClarifyingQuestionsResponse>>({
     ...EMPTY_SLOT,
   });

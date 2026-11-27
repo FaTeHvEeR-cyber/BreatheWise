@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import type {
   AppliedShockPatch,
   CpcbAqiResult,
@@ -11,19 +12,20 @@ import type { HabitSwapTotals } from '../utils/emissionsCalculator';
 import { SmogShockSimulatorSection } from './SmogShockSimulatorSection';
 
 interface AlternativesSimulatorWorkspaceProps {
-  liveData: LiveAirQualityData;
-  cpcb: CpcbAqiResult;
-  profile: HouseholdProfile;
-  selectedSwapIds: readonly string[];
-  swapTotals: HabitSwapTotals;
-  shockSlot: AsyncSlot<SmogShockResponse>;
-  appliedShockPatches: readonly AppliedShockPatch[];
-  onToggleSwap: (swapId: string) => void;
-  onUpdateCommuteKm: (km: number) => void;
-  onRunSmogShock: (scenario: string) => void;
-  onApplyShockStrategy: (strategy: SmogShockStrategy) => void;
+  readonly liveData: LiveAirQualityData;
+  readonly cpcb: CpcbAqiResult;
+  readonly profile: HouseholdProfile;
+  readonly selectedSwapIds: readonly string[];
+  readonly swapTotals: HabitSwapTotals;
+  readonly shockSlot: AsyncSlot<SmogShockResponse>;
+  readonly appliedShockPatches: readonly AppliedShockPatch[];
+  readonly onToggleSwap: (swapId: string) => void;
+  readonly onUpdateCommuteKm: (km: number) => void;
+  readonly onRunSmogShock: (scenario: string) => void;
+  readonly onApplyShockStrategy: (strategy: SmogShockStrategy) => void;
 }
 
+/** Commute & cooking habit swaps plus the AI smog-shock simulator workspace. */
 export default function AlternativesSimulatorWorkspace({
   liveData,
   cpcb,
@@ -36,7 +38,7 @@ export default function AlternativesSimulatorWorkspace({
   onUpdateCommuteKm,
   onRunSmogShock,
   onApplyShockStrategy,
-}: AlternativesSimulatorWorkspaceProps) {
+}: AlternativesSimulatorWorkspaceProps): ReactElement {
   return (
     <div id="panel-simulator" role="tabpanel" aria-labelledby="tab-simulator" className="space-y-6">
       <section

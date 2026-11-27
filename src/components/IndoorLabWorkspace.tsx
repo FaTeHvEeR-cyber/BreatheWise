@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import type {
   ClarifyingQuestion,
   CpcbAqiResult,
@@ -12,23 +13,24 @@ import { IndoorReductionMeter } from './IndoorReductionMeter';
 import { IndoorQuestionsPanel } from './IndoorQuestionsPanel';
 
 interface IndoorLabWorkspaceProps {
-  liveData: LiveAirQualityData;
-  cpcb: CpcbAqiResult;
-  profile: HouseholdProfile;
-  hasHouseholdProfile: boolean;
-  indoorMeter: IndoorMitigationMeter;
-  indoorSlot: AsyncSlot<IndoorProtocolResponse>;
-  indoorQuestions: readonly ClarifyingQuestion[];
-  indoorAnswers: Record<string, string>;
-  loadingMoreIndoorQuestions: boolean;
-  moreIndoorQuestionsError: string | null;
-  onUpdateProfile: (patch: Partial<HouseholdProfile>) => void;
-  onSetIndoorAnswer: (questionId: string, value: string) => void;
-  onAskTwoMoreIndoorQuestions: () => void;
-  onGenerateProtocol: () => void;
+  readonly liveData: LiveAirQualityData;
+  readonly cpcb: CpcbAqiResult;
+  readonly profile: HouseholdProfile;
+  readonly hasHouseholdProfile: boolean;
+  readonly indoorMeter: IndoorMitigationMeter;
+  readonly indoorSlot: AsyncSlot<IndoorProtocolResponse>;
+  readonly indoorQuestions: readonly ClarifyingQuestion[];
+  readonly indoorAnswers: Readonly<Record<string, string>>;
+  readonly loadingMoreIndoorQuestions: boolean;
+  readonly moreIndoorQuestionsError: string | null;
+  readonly onUpdateProfile: (patch: Partial<HouseholdProfile>) => void;
+  readonly onSetIndoorAnswer: (questionId: string, value: string) => void;
+  readonly onAskTwoMoreIndoorQuestions: () => void;
+  readonly onGenerateProtocol: () => void;
 }
 
-export default function IndoorLabWorkspace(props: IndoorLabWorkspaceProps) {
+/** Room-by-room indoor air mitigation lab with PM2.5 reduction estimator. */
+export default function IndoorLabWorkspace(props: IndoorLabWorkspaceProps): ReactElement {
   const {
     liveData,
     cpcb,
