@@ -94,10 +94,10 @@ describe('aiClient & deterministic fallback provenance', () => {
 
     const errorBody = makeStreamBody(['event: error\ndata: {"error":"Stream unavailable"}\n\n']);
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(errorBody, { status: 200 })));
-    await expect(streamClarifyingQuestionsClient({}, () => {})).rejects.toThrow('Stream unavailable');
+    await expect(streamClarifyingQuestionsClient({}, () => { })).rejects.toThrow('Stream unavailable');
 
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(makeStreamBody([]), { status: 200 })));
-    await expect(streamClarifyingQuestionsClient({}, () => {})).rejects.toThrow('Gemini stream ended');
+    await expect(streamClarifyingQuestionsClient({}, () => { })).rejects.toThrow('Gemini stream ended');
 
     vi.stubGlobal(
       'fetch',
@@ -107,7 +107,7 @@ describe('aiClient & deterministic fallback provenance', () => {
           new Response(JSON.stringify({ airContextNote: 'ok', questions: [], source: 'gemini-3.8-flash' }), { status: 200 }),
         ),
     );
-    const noBodyRes = await streamClarifyingQuestionsClient({}, () => {});
+    const noBodyRes = await streamClarifyingQuestionsClient({}, () => { });
     expect(noBodyRes.source).toBe('gemini-3.8-flash');
   });
 
