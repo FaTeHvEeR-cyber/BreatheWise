@@ -10,7 +10,7 @@ BreatheWise is an urban air-quality intelligence and low-emission household advi
 
 - **Zero-Hallucination Live Telemetry:** Every AQI reading, sub-index, WHO 2021 guideline ratio, and 24-hour airing window is computed deterministically in TypeScript from live Open-Meteo data before any AI synthesis runs.
 - **Actionable Low-Emission Living:** Converts city-level smog data into time-blocked daily routines, room-by-room indoor mitigation plans (HEPA and zero-purifier DIY budget modes), quantified CO₂/PM2.5/₹ habit swaps, emergency smog-shock overrides, and ready-to-share family/RWA/carpool advisories.
-- **Honest Provenance:** Every AI response carries explicit provenance (`source: 'gemini-2.5-flash'` / `'gemini-2.0-flash'` vs. `source: 'deterministic'`) alongside the live Open-Meteo source URL and local reading timestamp.
+- **Honest Provenance:** Every AI response carries explicit provenance (`source: 'gemini-3.8-flash'` / `'gemini-3.1-flash-lite'` vs. `source: 'deterministic'`) alongside the live Open-Meteo source URL and local reading timestamp.
 
 ---
 
@@ -30,7 +30,7 @@ React 19 + Vite SPA (src/)
    └── AI Synthesis Requests ──> Vercel Serverless (/api/*) or Express (server.ts)
                                     ├── HTTP Guards: POST-only (405), JSON-only (415), 128 KB max (413), Cache-Control: no-store
                                     ├── Runtime Trust Boundary: Zod Request & Response Schemas (src/validation/aqiContracts.ts)
-                                    ├── @google/genai: gemini-2.5-flash (fallback: gemini-2.0-flash, 15s timeout)
+                                    ├── @google/genai: gemini-3.8-flash (fallback: gemini-3.1-flash-lite, 20s timeout)
                                     └── Safe Error Boundary (no key/stack leakage) + Client Deterministic Fallback
 ```
 
@@ -65,7 +65,7 @@ React 19 + Vite SPA (src/)
 ```bash
 npm ci
 cp .env.example .env
-# Set GEMINI_API_KEY in .env (optional: GEMINI_MODEL=gemini-2.5-flash)
+# Set GEMINI_API_KEY in .env (optional: GEMINI_MODEL=gemini-3.8-flash)
 npm run dev
 ```
 

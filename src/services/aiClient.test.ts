@@ -38,7 +38,7 @@ describe('aiClient & deterministic fallback provenance', () => {
   it('calls all 5 REST endpoints and preserves Gemini provenance', async () => {
     const fetchMock = vi.fn().mockImplementation((url: string) =>
       Promise.resolve(
-        new Response(JSON.stringify({ okUrl: url, source: 'gemini-2.5-flash' }), {
+        new Response(JSON.stringify({ okUrl: url, source: 'gemini-3.8-flash' }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         }),
@@ -52,11 +52,11 @@ describe('aiClient & deterministic fallback provenance', () => {
     const s = await callSmogShock({ city: 'Delhi' });
     const c = await callCommunityBriefing({ city: 'Delhi' });
 
-    expect(q.source).toBe('gemini-2.5-flash');
-    expect(r.source).toBe('gemini-2.5-flash');
-    expect(i.source).toBe('gemini-2.5-flash');
-    expect(s.source).toBe('gemini-2.5-flash');
-    expect(c.source).toBe('gemini-2.5-flash');
+    expect(q.source).toBe('gemini-3.8-flash');
+    expect(r.source).toBe('gemini-3.8-flash');
+    expect(i.source).toBe('gemini-3.8-flash');
+    expect(s.source).toBe('gemini-3.8-flash');
+    expect(c.source).toBe('gemini-3.8-flash');
     expect(fetchMock).toHaveBeenCalledTimes(5);
   });
 
@@ -84,13 +84,13 @@ describe('aiClient & deterministic fallback provenance', () => {
     const sseBody = makeStreamBody([
       'event: chunk\ndata: {"delta":"{\\"airContextNote\\":\\"Delhi 310\\","}\n\n',
       'event: chunk\ndata: {"delta":"\\"questions\\":[{\\"id\\":\\"q1\\",\\"question\\":\\"Metro?\\",\\"reason\\":\\"Clean\\",\\"quickOptions\\":[\\"Yes\\",\\"No\\",\\"WFH\\"]}]}"}\n\n',
-      'event: done\ndata: {"airContextNote":"Delhi 310","questions":[{"id":"q1","question":"Metro?","reason":"Clean","quickOptions":["Yes","No","WFH"]}],"source":"gemini-2.5-flash"}\n\n',
+      'event: done\ndata: {"airContextNote":"Delhi 310","questions":[{"id":"q1","question":"Metro?","reason":"Clean","quickOptions":["Yes","No","WFH"]}],"source":"gemini-3.8-flash"}\n\n',
     ]);
 
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(sseBody, { status: 200 })));
     const result = await streamClarifyingQuestionsClient({}, (p) => partials.push(p.airContextNote));
     expect(partials.length).toBeGreaterThan(0);
-    expect(result.source).toBe('gemini-2.5-flash');
+    expect(result.source).toBe('gemini-3.8-flash');
 
     const errorBody = makeStreamBody(['event: error\ndata: {"error":"Stream unavailable"}\n\n']);
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(errorBody, { status: 200 })));
@@ -104,11 +104,11 @@ describe('aiClient & deterministic fallback provenance', () => {
       vi.fn()
         .mockResolvedValueOnce({ ok: true, status: 200, body: null })
         .mockResolvedValueOnce(
-          new Response(JSON.stringify({ airContextNote: 'ok', questions: [], source: 'gemini-2.5-flash' }), { status: 200 }),
+          new Response(JSON.stringify({ airContextNote: 'ok', questions: [], source: 'gemini-3.8-flash' }), { status: 200 }),
         ),
     );
     const noBodyRes = await streamClarifyingQuestionsClient({}, () => {});
-    expect(noBodyRes.source).toBe('gemini-2.5-flash');
+    expect(noBodyRes.source).toBe('gemini-3.8-flash');
   });
 
   it('marks all deterministic fallback responses with source: deterministic', () => {

@@ -155,7 +155,7 @@ export function handleHealthRequest(req: ApiRequestLike, res: ApiResponseLike): 
     app: 'BreatheWise',
     timestamp: new Date().toISOString(),
     geminiConfigured: Boolean((process.env.GEMINI_API_KEY ?? '').trim()),
-    model: (process.env.GEMINI_MODEL ?? '').trim() || 'gemini-2.5-flash',
+    model: (process.env.GEMINI_MODEL ?? '').trim() || 'gemini-3.8-flash',
   });
 }
 

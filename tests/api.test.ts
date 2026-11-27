@@ -82,7 +82,7 @@ describe('Vercel API routes & Zod trust boundaries', () => {
     healthHandler({ method: 'GET', headers: {} }, res);
     expect(res.statusCode).toBe(200);
     expect(res.headers['cache-control']).toBe('no-store');
-    expect(res.jsonBody).toMatchObject({ status: 'ok', geminiConfigured: true, model: 'gemini-2.5-flash' });
+    expect(res.jsonBody).toMatchObject({ status: 'ok', geminiConfigured: true, model: 'gemini-3.8-flash' });
     expect(JSON.stringify(res.jsonBody)).not.toContain('test-secret-api-key-12345');
 
     delete process.env.GEMINI_API_KEY;
@@ -141,7 +141,7 @@ describe('Vercel API routes & Zod trust boundaries', () => {
     expect(badZodRes.statusCode).toBe(400);
   });
 
-  it('returns 200 with source gemini-2.5-flash across all 5 AI actions', async () => {
+  it('returns 200 with source gemini-3.8-flash across all 5 AI actions', async () => {
     mockGenerateContent
       .mockResolvedValueOnce({ text: JSON.stringify({ airContextNote: 'Delhi AQI 280.', questions: [{ id: 'q1', question: 'Metro?', reason: 'Clean.', quickOptions: ['Yes', 'No', 'WFH'] }] }) })
       .mockResolvedValueOnce({ text: JSON.stringify({ routineHeadline: 'Delhi Routine', blocks: [{ id: 'b1', timeBlock: 'Morning', timeRange: '7–10 AM', title: 'Seal', recommendedAction: 'Close', whyThisMatters: 'Lowers PM2.5', protectionWeight: 100, gearOrPrep: 'N95' }], dailySummaryNote: 'Grounded.' }) })
@@ -152,7 +152,7 @@ describe('Vercel API routes & Zod trust boundaries', () => {
     const qRes = createMockRes();
     await questionsHandler({ method: 'POST', headers: { 'content-type': 'application/json' }, body: VALID_QUESTIONS_REQ }, qRes);
     expect(qRes.statusCode).toBe(200);
-    expect((qRes.jsonBody as { source: string }).source).toBe('gemini-2.5-flash');
+    expect((qRes.jsonBody as { source: string }).source).toBe('gemini-3.8-flash');
 
     const rRes = createMockRes();
     await routineHandler({
@@ -183,7 +183,7 @@ describe('Vercel API routes & Zod trust boundaries', () => {
     expect(cRes.statusCode).toBe(200);
   });
 
-  it('falls back to gemini-2.0-flash on retryable errors and streams SSE cleanly', async () => {
+  it('falls back to gemini-3.1-flash-lite on retryable errors and streams SSE cleanly', async () => {
     mockGenerateContent
       .mockRejectedValueOnce(new Error('503 UNAVAILABLE'))
       .mockResolvedValueOnce({ text: JSON.stringify({ airContextNote: 'Delhi AQI 280.', questions: [{ id: 'q1', question: 'Metro?', reason: 'Clean.', quickOptions: ['Yes', 'No', 'WFH'] }] }) });
@@ -191,7 +191,7 @@ describe('Vercel API routes & Zod trust boundaries', () => {
     const fallbackRes = createMockRes();
     await questionsHandler({ method: 'POST', headers: { 'content-type': 'application/json' }, body: VALID_QUESTIONS_REQ }, fallbackRes);
     expect(fallbackRes.statusCode).toBe(200);
-    expect((fallbackRes.jsonBody as { source: string }).source).toBe('gemini-2.0-flash');
+    expect((fallbackRes.jsonBody as { source: string }).source).toBe('gemini-3.1-flash-lite');
 
     mockGenerateContentStream.mockResolvedValueOnce(
       (async function* () {
@@ -202,7 +202,7 @@ describe('Vercel API routes & Zod trust boundaries', () => {
     const sseRes = createMockRes();
     await streamHandler({ method: 'POST', headers: { 'content-type': 'application/json' }, body: VALID_QUESTIONS_REQ }, sseRes);
     expect(sseRes.chunks.join('')).toContain('event: done');
-    expect(sseRes.chunks.join('')).toContain('gemini-2.5-flash');
+    expect(sseRes.chunks.join('')).toContain('gemini-3.8-flash');
   });
 
   it('rejects placeholder keys and returns secret-free 500 errors and safe logs', async () => {

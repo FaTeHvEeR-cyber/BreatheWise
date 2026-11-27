@@ -23,7 +23,7 @@ import {
   SmogShockModelSchema,
 } from '../validation/aqiContracts.js';
 
-const FALLBACK_MODEL = 'gemini-2.0-flash';
+const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 const PER_ATTEMPT_TIMEOUT_MS = 20_000;
 const PLACEHOLDER_API_KEYS = new Set([
   'your_google_ai_studio_api_key_here',
@@ -50,7 +50,7 @@ let cachedApiKey: string | null = null;
 
 function getModelChain(): readonly string[] {
   const configured = (process.env.GEMINI_MODEL ?? '').trim();
-  const primary = configured || 'gemini-2.5-flash';
+  const primary = configured || 'gemini-3.8-flash';
   return primary === FALLBACK_MODEL ? [primary] : [primary, FALLBACK_MODEL];
 }
 
